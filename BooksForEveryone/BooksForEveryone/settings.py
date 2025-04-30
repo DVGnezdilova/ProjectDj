@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'books',
 ]
 
+
 MIDDLEWARE = [
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',

@@ -31,8 +31,119 @@ def index(request):
     calculate_discounted_price(recommended_books)
     calculate_discounted_price(new_books)
 
+    # Получение уникальных жанров из базы данных
+    genres = Book.objects.values_list('genre', flat=True).distinct()
+
     # Передаем данные в шаблон
     return render(request, 'index.html', {
         'recommended_books': recommended_books,
-        'new_books': new_books
+        'new_books': new_books,
+        'genres': genres  # Добавляем жанры в контекст
     })
+
+
+
+def vhod(request):                                        #функция по работе страницы авторизации
+    # if request.method == 'POST':
+    #     username = request.POST.get('username')
+    #     password = request.POST.get('password')
+    #     action = request.POST.get('btn')
+    #     if action == 'Войти':
+    #         account = Accounts.objects.filter(username=username, password=password).first() #Если QuerySet пуст, то метод first() вернет None
+    #         if account:
+    #             messages.success(request, "Вход выполнен успешно!")
+    #             request.session['user_id'] = account.id
+    #             if account.id == 1:
+    #                 return redirect('admin:login')
+    #             else:
+    #                 return redirect('hello_page_lk')
+    #         else:
+    #             messages.error(request, "Неверные имя пользователя или пароль.")
+    #     elif action == 'Регистрация':
+    #         try:
+    #             Accounts.objects.get(username=username)
+    #             messages.error(request, "Пользователь с таким именем уже существует.")
+    #         except Accounts.DoesNotExist:
+    #             new_account = Accounts.objects.create(username=username, password=password)
+    #             messages.success(request, "Регистрация прошла успешно!")
+    #             request.session['user_id'] = new_account.id                                           
+    #             return redirect('hello_page_lk') 
+    return render(request, 'vhod.html')
+
+
+def regist(request):                                        #функция по работе страницы авторизации
+
+    return render(request, 'regist.html')
+
+def avtoriz(request):
+    # Фильтрация книг для "Персональных рекомендаций"
+    recommended_books = Book.objects.filter(
+        genre="Фэнтези"  # Книги жанра "Фантастика"
+    ).prefetch_related('id_writer')
+
+    # Фильтрация книг для "Новинок"
+    new_books = Book.objects.filter(
+        year__year=2025  # Книги, выпущенные в 2024 году
+    ).prefetch_related('id_writer')
+
+    # Расчет цены со скидкой для всех книг
+    def calculate_discounted_price(books):
+        for book in books:
+            # Расчет цены со скидкой с округлением до целых чисел
+            if book.sale:
+                discount_percentage = int(book.sale)
+                book.discounted_price = round(book.discount - (book.discount * discount_percentage / 100))
+            else:
+                book.discounted_price = book.discount
+
+    # Применяем расчет цены со скидкой к обоим наборам книг
+    calculate_discounted_price(recommended_books)
+    calculate_discounted_price(new_books)
+
+    # Получение уникальных жанров из базы данных
+    genres = Book.objects.values_list('genre', flat=True).distinct()
+
+    # Передаем данные в шаблон
+    return render(request, 'avtoriz.html', {
+        'recommended_books': recommended_books,
+        'new_books': new_books,
+        'genres': genres  # Добавляем жанры в контекст
+    })
+
+
+def journal(request):                                        #функция по работе страницы авторизации
+       # Фильтрация книг для "Персональных рекомендаций"
+    recommended_books = Book.objects.filter(
+        genre="Фэнтези"  # Книги жанра "Фантастика"
+    ).prefetch_related('id_writer')
+
+    # Фильтрация книг для "Новинок"
+    new_books = Book.objects.filter(
+        year__year=2025  # Книги, выпущенные в 2024 году
+    ).prefetch_related('id_writer')
+
+    # Расчет цены со скидкой для всех книг
+    def calculate_discounted_price(books):
+        for book in books:
+            # Расчет цены со скидкой с округлением до целых чисел
+            if book.sale:
+                discount_percentage = int(book.sale)
+                book.discounted_price = round(book.discount - (book.discount * discount_percentage / 100))
+            else:
+                book.discounted_price = book.discount
+
+    # Применяем расчет цены со скидкой к обоим наборам книг
+    calculate_discounted_price(recommended_books)
+    calculate_discounted_price(new_books)
+
+    # Получение уникальных жанров из базы данных
+    genres = Book.objects.values_list('genre', flat=True).distinct()
+
+    # Передаем данные в шаблон
+    return render(request, 'journal.html', {
+        # 'recommended_books': recommended_books,
+        # 'new_books': new_books,
+        'genres': genres  # Добавляем жанры в контекст
+    })
+
+

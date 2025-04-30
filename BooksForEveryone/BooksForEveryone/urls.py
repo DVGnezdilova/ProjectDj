@@ -16,11 +16,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from books.views import index
+from books.views import index, vhod, regist, avtoriz, journal
 from django.urls import include, path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', index, name='index.html'),
+    path('vh/', vhod, name='vhod.html'),
+    path('regist/', regist, name='regist.html'),
+    path('avtoriz/', avtoriz, name='avtoriz.html'),
+    path('journal/', journal, name='journal.html'),
     path('__debug__/', include('debug_toolbar.urls')),
 ]

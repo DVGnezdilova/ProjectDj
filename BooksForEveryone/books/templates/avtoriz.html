@@ -11,7 +11,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.min.css">
 </head>
 <body>
-      <header class="bg-light p-3">
+
+    <header class="bg-light p-3">
         <div class="container">
           <!-- Верхняя строка с мелкими ссылками -->
           <div class="d-flex justify-content-between align-items-center">
@@ -21,7 +22,9 @@
                 <a href="#" class="text-decoration-none text-muted fs-6">Наши магазины</a>
             </div>
             <div class="d-flex gap-3">
-                <a href="{% url 'vhod.html' %}" class="navbt btn p-0" name="vhod"><b><u>Войти</u></b></a>
+                <button class="navbt btn btn-light px-2"><i class="bi bi-heart-fill"></i></button>
+                <button class="navbt btn btn-light px-2"><i class="bi bi-cart"></i></button>
+                <a class="bi bi-person-fill navbt btn btn-light px-2" name="vhod"></a>  
             </div> 
         </div>
       
@@ -51,6 +54,7 @@
         </nav>
         </div>
       </header>
+
     <!-- Main Content -->
   <!-- Главное содержимое -->
     <main class="container mt-4">
