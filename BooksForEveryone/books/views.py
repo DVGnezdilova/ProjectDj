@@ -1,5 +1,5 @@
 from django.db.models import Avg
-from .models import Book
+from .models import Book, Article
 from django.contrib.auth.models import User
 
 from django.shortcuts import render, redirect
@@ -191,10 +191,15 @@ def journal(request):                                        #функция п�
     # Получение уникальных жанров из базы данных
     genres = Book.objects.values_list('genre', flat=True).distinct()
 
+    # Получаем все статьи из базы данных
+    articles = Article.objects.all()
+
+
     # Передаем данные в шаблон
     return render(request, 'journal.html', {
         # 'recommended_books': recommended_books,
         # 'new_books': new_books,
+        'articles': articles,
         'genres': genres  # Добавляем жанры в контекст
     })
 

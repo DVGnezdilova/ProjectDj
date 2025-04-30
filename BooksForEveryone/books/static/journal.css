@@ -65,10 +65,33 @@ body {
     font-family: 'Arial', sans-serif;
 }
 
+ul {
+    list-style-type: none; /* Убирает буллиты */
+}
+
 .container {
     max-width: 1200px;
 }
+/* Скрываем сайдбар на маленьких экранах */
+@media (max-width: 768px) {
+    .sidebar {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 250px;
+        height: 100%;
+        background-color: #f8f9fa;
+        z-index: 1000;
+        padding: 20px;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    }
 
+    /* Показываем сайдбар при активации */
+    .sidebar.active {
+        display: block;
+    }
+}
 /* Стили для индикаторов (кружков) */
 .custom-carousel-indicators {
     display: flex;
@@ -92,10 +115,14 @@ body {
     background-color: #007bff; /* Цвет активного кружка */
   }
 
-.card {
+  .card {
     border: none;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease;
+    width: 100%; /* Карточка занимает всю доступную ширину */
+    max-width: 280px; /* Ограничивает максимальную ширину */
+    display: flex; /* Делаем карточку гибким контейнером */
+    flex-direction: column; /* Элементы внутри карточки располагаются вертикально */
 }
 
 .card:hover {
@@ -107,8 +134,19 @@ body {
     object-fit: cover;
 }
 
+.card-body {
+    flex-grow: 1; /* Занимает всё доступное пространство внутри карточки */
+    display: flex; /* Делаем card-body гибким контейнером */
+    flex-direction: column; /* Элементы внутри card-body располагаются вертикально */
+    justify-content: space-between; /* Разделяем содержимое по вертикали */
+}
+
+.card-btn {
+    margin-top: auto; /* Прижимаем кнопку к низу */
+}
+
 .carousel-inner img {
-    height: 400px;
+    height: 500px;
     object-fit: cover;
 }
 
@@ -263,3 +301,57 @@ footer p {
     background-color: #0056b3;
 }
 
+/* Стиль для модального окна */
+.modal {
+    display: none; /* По умолчанию скрыто */
+    position: fixed;
+    z-index: 1000; /* Поверх всех элементов */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Полупрозрачный фон */
+}
+
+/* Стиль для контента модального окна */
+.modal-content {
+    background-color: #fff;
+    margin: 5% auto; /* Центрирование по вертикали и горизонтали */
+    padding: 30px; /* Увеличенные отступы */
+    border-radius: 12px; /* Скругление углов */
+    width: 80%; /* Ширина окна */
+    max-width: 800px; /* Максимальная ширина */
+    font-size: 18px; /* Увеличенный размер шрифта */
+    line-height: 1.6; /* Улучшенное межстрочное расстояние */
+    position: relative;
+}
+
+/* Кнопка закрытия */
+.close {
+    position: absolute;
+    right: 15px;
+    top: 10px;
+    color: #aaa;
+    font-size: 30px; /* Увеличенный размер крестика */
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+}
+
+/* Увеличенный размер ссылок */
+.modal-content a {
+    font-size: 20px; /* Размер шрифта для ссылок */
+    color: #0d6efd; /* Цвет ссылок */
+    text-decoration: underline;
+}
+
+/* Увеличенный размер телефонного номера */
+.modal-content strong {
+    font-size: 20px; /* Размер шрифта для номера телефона */
+    color: #28a745; /* Цвет номера телефона */
+}
