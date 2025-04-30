@@ -16,7 +16,15 @@
         <section class="registration-authentication">
             <div class="form-container">
                 <h2>Регистрация</h2>
-                <form action="#" method="POST" id="registrationForm">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'success' %}alert-success{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                <form action="{% url 'regist' %}" method="POST" id="registrationForm"> 
+                    {% csrf_token %}
 
                     <label for="phone">Номер телефона:</label>
                     <input type="text" id="phone" name="phone" placeholder="+7 (___) ___-___">
@@ -24,25 +32,37 @@
                     <script>
                         document.getElementById('phone').addEventListener('input', function(event) {
                             const input = event.target;
+                            let cursorPosition = input.selectionStart; // Сохраняем позицию курсора
+                    
                             let phoneNumber = input.value.replace(/\D/g, ''); // Удаляем все нецифровые символы
-
+                    
                             // Ограничиваем длину номера до 11 цифр
                             if (phoneNumber.length > 11) {
                                 phoneNumber = phoneNumber.substring(0, 11); // Обрезаем до 11 цифр
                             }
-
+                    
                             // Форматируем номер телефона
+                            let formattedNumber = '+7';
                             if (phoneNumber.length > 0) {
-                                phoneNumber = '+7 (' + 
-                                    (phoneNumber.substring(1, 4) ? phoneNumber.substring(1, 4) : '___') + ') ' +
-                                    (phoneNumber.substring(4, 7) ? phoneNumber.substring(4, 7) : '___') + '-' +
-                                    (phoneNumber.substring(7, 11) ? phoneNumber.substring(7, 11) : '____');
+                                formattedNumber += '(' + (phoneNumber.substring(1, 4) || '___') + ')';
+                                formattedNumber += '-' + (phoneNumber.substring(4, 7) || '___');
+                                formattedNumber += '-' + (phoneNumber.substring(7, 11) || '____');
                             } else {
-                                phoneNumber = '+7 (___) ___-___'; // Если ничего не введено, показываем плейсхолдер
+                                formattedNumber = '+7(___) ___-____'; // Если ничего не введено, показываем плейсхолдер
                             }
-
+                    
+                            // Проверяем, удаляет ли пользователь символы
+                            if (input.value.length < formattedNumber.length && phoneNumber.length === 0) {
+                                // Если пользователь полностью удалил текст, восстанавливаем плейсхолдер
+                                input.value = '+7(___) ___-____';
+                                return;
+                            }
+                    
                             // Устанавливаем отформатированный номер обратно в поле ввода
-                            input.value = phoneNumber;
+                            input.value = formattedNumber;
+                    
+                            // Восстанавливаем позицию курсора
+                            input.setSelectionRange(cursorPosition, cursorPosition);
                         });
                     </script>
 
@@ -50,7 +70,7 @@
                     <input type="password" id="password" name="password" placeholder="Введите пароль" required>
 
                     <label for="confirm-password">Подтвердите пароль:</label>
-                    <input type="password" id="confirm-password" name="confirm-password" placeholder="Подтвердите пароль" required>
+                    <input type="password" id="confirm_password" name="confirm_password" placeholder="Подтвердите пароль" required>
 
                     <button type="submit" class="btn btn-primary" href="">Зарегистрироваться</button>
 
@@ -107,5 +127,3 @@
             });
         });
     </script> -->
-</body>
-</html>

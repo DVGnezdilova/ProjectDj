@@ -22,9 +22,10 @@ from django.urls import include, path
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', index, name='index.html'),
-    path('vh/', vhod, name='vhod.html'),
-    path('regist/', regist, name='regist.html'),
+    path('vhod/', vhod, name='vhod'),
+    path('regist/', regist, name='regist'),
     path('avtoriz/', avtoriz, name='avtoriz.html'),
     path('journal/', journal, name='journal.html'),
     path('__debug__/', include('debug_toolbar.urls')),
 ]
+

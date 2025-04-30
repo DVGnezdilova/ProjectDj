@@ -1,10 +1,10 @@
 from django.db.models import Avg
-from django.shortcuts import render
 from .models import Book
+from django.contrib.auth.models import User
 
-
-from django.shortcuts import render
-from .models import Book
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login
+from django.contrib import messages
 
 def index(request):
     # Фильтрация книг для "Персональных рекомендаций"
@@ -41,9 +41,61 @@ def index(request):
         'genres': genres  # Добавляем жанры в контекст
     })
 
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.models import User
+from django.shortcuts import render, redirect
+from django.contrib import messages
+
+def vhod(request):
+    if request.method == 'POST':
+        phone = request.POST.get('phone')
+        password = request.POST.get('password')
+
+        # Проверяем, существует ли пользователь с таким username
+        try:
+            user = User.objects.get(username=phone)
+        except User.DoesNotExist:
+            messages.error(request, "Аккаунта с таким номером телефона не существует. Рекомендуется зарегистрироваться.")
+            return redirect('vhod')
+
+        # Проверяем пароль
+        auth_user = authenticate(username=user.username, password=password)
+        if auth_user is not None:
+            login(request, auth_user)
+            return redirect('avtoriz.html')  # Перенаправляем на страницу авторизованного пользователя
+        else:
+            messages.error(request, "Неправильный пароль.")
+            return redirect('vhod')
+
+    return render(request, 'vhod.html')
 
 
-def vhod(request):                                        #функция по работе страницы авторизации
+def regist(request):
+    if request.method == 'POST':
+        phone = request.POST.get('phone')
+        password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+
+        # Проверяем, что пароли совпадают
+        if password != confirm_password:
+            messages.error(request, "Пароли не совпадают.")
+            return redirect('regist')
+
+        # Проверяем, существует ли уже пользователь с таким username
+        if User.objects.filter(username=phone).exists():
+            messages.error(request, "Пользователь с таким номером телефона уже существует.")
+            return redirect('regist')
+
+        # Создаем нового пользователя
+        user = User.objects.create_user(username=phone, password=password)
+        user.save()
+        messages.success(request, "Аккаунт успешно создан. Теперь вы можете войти.")
+        return redirect('vhod')
+
+    return render(request, 'regist.html')
+
+
+# def vhod(request):                                        #функция по работе страницы авторизации
     # if request.method == 'POST':
     #     username = request.POST.get('username')
     #     password = request.POST.get('password')
@@ -68,12 +120,12 @@ def vhod(request):                                        #функция по �
     #             messages.success(request, "Регистрация прошла успешно!")
     #             request.session['user_id'] = new_account.id                                           
     #             return redirect('hello_page_lk') 
-    return render(request, 'vhod.html')
+    # return render(request, 'vhod.html')
 
 
-def regist(request):                                        #функция по работе страницы авторизации
+# def regist(request):                                        #функция по работе страницы авторизации
 
-    return render(request, 'regist.html')
+    # return render(request, 'regist.html')
 
 def avtoriz(request):
     # Фильтрация книг для "Персональных рекомендаций"
