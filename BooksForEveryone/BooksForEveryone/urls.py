@@ -26,7 +26,7 @@ urlpatterns = [
     path('regist/', regist, name='regist'),
     path('avtoriz/', avtoriz, name='avtoriz.html'),
     path('journal/', journal, name='journal'),
-    path('catalog/', catalog, name='catalog'),
+    path('catalog/<str:genre>/', catalog, name='catalog'),
     path('__debug__/', include('debug_toolbar.urls')),
 ]
 

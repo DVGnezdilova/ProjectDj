@@ -197,29 +197,27 @@ def journal(request):                                        #функция п�
         'genres': genres  # Добавляем жанры в контекст
     })
 
-def catalog(request):
-    # Фильтрация книг для "Новинок"
-    new_books = Book.objects.filter().prefetch_related('id_writer')
-
-    # Расчет цены со скидкой для всех книг
+def catalog(request, genre):
+    # Фильтрация книг по жанру
+    new_books = Book.objects.filter(genre=genre).prefetch_related('id_writer')
+    
+    # Расчет цены со скидкой
     def calculate_discounted_price(books):
         for book in books:
-            # Расчет цены со скидкой с округлением до целых чисел
             if book.sale:
                 discount_percentage = int(book.sale)
                 book.discounted_price = round(book.discount - (book.discount * discount_percentage / 100))
             else:
                 book.discounted_price = book.discount
-
-    # Применяем расчет цены со скидкой к обоим наборам книг
+    
     calculate_discounted_price(new_books)
-
-    # Получение уникальных жанров из базы данных
+    
+    # Получение всех жанров (для фильтров на странице каталога)
     genres = Book.objects.values_list('genre', flat=True).distinct()
-
-    # Передаем данные в шаблон
+    
     return render(request, 'catalog.html', {
         'new_books': new_books,
-        'genres': genres  # Добавляем жанры в контекст
+        'genres': genres,
+        'current_genre': genre,
     })
 

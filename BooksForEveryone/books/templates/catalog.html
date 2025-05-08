@@ -79,7 +79,7 @@
       
           <!-- Название сайта -->
           <div class="text-center mb-3">
-            <h1 class="m-0 fs-2 fw-bold">Books For Everyone</h1>
+            <h1 class="m-0 fs-2 fw-bold"><a href="{% url 'index' %}" name="index" class="text-decoration-none text-dark">Books For Everyone</a></h1>
           </div>
       
           <!-- Основная навигация -->
@@ -114,12 +114,12 @@
                 <nav aria-label="Breadcrumb">
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item"><a href="{% url 'index' %}" name="index"><b>Главная</b></a></li>
-                        <li class="breadcrumb-item">Каталог - ???</li>
+                        <li class="breadcrumb-item">Каталог - {{ current_genre }}</li>
                     </ol>
                 </nav>
 
         <section class="mb-5">
-            <h2 class="text-center mb-4">???</h2>
+            <h2 class="text-center mb-4">{{ current_genre }}</h2>
             <div class="catalog">
                 <div class="container">
                     <div class="row row-equal-height">
