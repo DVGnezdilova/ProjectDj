@@ -7,10 +7,6 @@ from django.contrib.auth import authenticate, login
 from django.contrib import messages
 
 def index(request):
-    # Фильтрация книг для "Персональных рекомендаций"
-    recommended_books = Book.objects.filter(
-        genre="Фэнтези"  # Книги жанра "Фантастика"
-    ).prefetch_related('id_writer')
 
     # Фильтрация книг для "Новинок"
     new_books = Book.objects.filter(
@@ -28,7 +24,6 @@ def index(request):
                 book.discounted_price = book.discount
 
     # Применяем расчет цены со скидкой к обоим наборам книг
-    calculate_discounted_price(recommended_books)
     calculate_discounted_price(new_books)
 
     # Получение уникальных жанров из базы данных
@@ -36,7 +31,6 @@ def index(request):
 
     # Передаем данные в шаблон
     return render(request, 'index.html', {
-        'recommended_books': recommended_books,
         'new_books': new_books,
         'genres': genres  # Добавляем жанры в контекст
     })
@@ -203,4 +197,29 @@ def journal(request):                                        #функция п�
         'genres': genres  # Добавляем жанры в контекст
     })
 
+def catalog(request):
+    # Фильтрация книг для "Новинок"
+    new_books = Book.objects.filter().prefetch_related('id_writer')
+
+    # Расчет цены со скидкой для всех книг
+    def calculate_discounted_price(books):
+        for book in books:
+            # Расчет цены со скидкой с округлением до целых чисел
+            if book.sale:
+                discount_percentage = int(book.sale)
+                book.discounted_price = round(book.discount - (book.discount * discount_percentage / 100))
+            else:
+                book.discounted_price = book.discount
+
+    # Применяем расчет цены со скидкой к обоим наборам книг
+    calculate_discounted_price(new_books)
+
+    # Получение уникальных жанров из базы данных
+    genres = Book.objects.values_list('genre', flat=True).distinct()
+
+    # Передаем данные в шаблон
+    return render(request, 'catalog.html', {
+        'new_books': new_books,
+        'genres': genres  # Добавляем жанры в контекст
+    })
 
