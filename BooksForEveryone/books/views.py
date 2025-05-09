@@ -181,31 +181,25 @@ def journal(request):
 def catalog(request, genre=None):
     query = request.GET.get('q', '')  # Получаем поисковый запрос
 
-    # Фильтрация по жанру (если указан)
     if genre:
         books = Book.objects.filter(genre=genre).prefetch_related('id_writer')
     else:
         books = Book.objects.all().prefetch_related('id_writer')
 
-    # Поиск по названию книги или псевдониму автора
     if query:
         books = books.filter(
             Q(title__icontains=query) | 
             Q(id_writer__nickname__icontains=query)
-        ).distinct()  # Убираем дубликаты
+        ).distinct()
 
     # Расчет цены со скидкой
-    def calculate_discounted_price(books_list):
-        for book in books_list:
-            if book.sale:
-                discount_percentage = int(book.sale)
-                book.discounted_price = round(book.discount - (book.discount * discount_percentage / 100))
-            else:
-                book.discounted_price = book.discount
+    for book in books:
+        if book.sale:
+            discount_percentage = int(book.sale)
+            book.discounted_price = round(book.discount - (book.discount * discount_percentage / 100))
+        else:
+            book.discounted_price = book.discount
 
-    calculate_discounted_price(books)
-
-    # Получение всех жанров для меню
     genres = Book.objects.values_list('genre', flat=True).distinct()
 
     return render(request, 'catalog.html', {
@@ -213,5 +207,5 @@ def catalog(request, genre=None):
         'genres': genres,
         'query': query,
         'current_genre': genre,
-    })
+    })  
 
