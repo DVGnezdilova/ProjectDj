@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
+from django.db.models import Q
 
 def index(request):
 
@@ -156,68 +157,61 @@ def avtoriz(request):
         'genres': genres  # Добавляем жанры в контекст
     })
 
+def journal(request):
+    query = request.GET.get('q', '')  # Получаем поисковый запрос
 
-def journal(request):                                        #функция по работе страницы авторизации
-       # Фильтрация книг для "Персональных рекомендаций"
-    recommended_books = Book.objects.filter(
-        genre="Фэнтези"  # Книги жанра "Фантастика"
-    ).prefetch_related('id_writer')
+    if query:
+        # Ищем совпадения в заголовках или текстах статей
+        articles = Article.objects.filter(
+            Q(title_article__icontains=query) | Q(text_article__icontains=query)
+        )
+    else:
+        # Если поисковый запрос пустой — показываем все статьи
+        articles = Article.objects.all()
 
-    # Фильтрация книг для "Новинок"
-    new_books = Book.objects.filter(
-        year__year=2025  # Книги, выпущенные в 2024 году
-    ).prefetch_related('id_writer')
-
-    # Расчет цены со скидкой для всех книг
-    def calculate_discounted_price(books):
-        for book in books:
-            # Расчет цены со скидкой с округлением до целых чисел
-            if book.sale:
-                discount_percentage = int(book.sale)
-                book.discounted_price = round(book.discount - (book.discount * discount_percentage / 100))
-            else:
-                book.discounted_price = book.discount
-
-    # Применяем расчет цены со скидкой к обоим наборам книг
-    calculate_discounted_price(recommended_books)
-    calculate_discounted_price(new_books)
-
-    # Получение уникальных жанров из базы данных
+    # Получение всех жанров для выпадающего меню каталога
     genres = Book.objects.values_list('genre', flat=True).distinct()
 
-    # Получаем все статьи из базы данных
-    articles = Article.objects.all()
-
-
-    # Передаем данные в шаблон
     return render(request, 'journal.html', {
-        # 'recommended_books': recommended_books,
-        # 'new_books': new_books,
         'articles': articles,
-        'genres': genres  # Добавляем жанры в контекст
+        'genres': genres,  # ✅ Передаем жанры в шаблон
+        'query': query,
     })
 
-def catalog(request, genre):
-    # Фильтрация книг по жанру
-    new_books = Book.objects.filter(genre=genre).prefetch_related('id_writer')
-    
+def catalog(request, genre=None):
+    query = request.GET.get('q', '')  # Получаем поисковый запрос
+
+    # Фильтрация по жанру (если указан)
+    if genre:
+        books = Book.objects.filter(genre=genre).prefetch_related('id_writer')
+    else:
+        books = Book.objects.all().prefetch_related('id_writer')
+
+    # Поиск по названию книги или псевдониму автора
+    if query:
+        books = books.filter(
+            Q(title__icontains=query) | 
+            Q(id_writer__nickname__icontains=query)
+        ).distinct()  # Убираем дубликаты
+
     # Расчет цены со скидкой
-    def calculate_discounted_price(books):
-        for book in books:
+    def calculate_discounted_price(books_list):
+        for book in books_list:
             if book.sale:
                 discount_percentage = int(book.sale)
                 book.discounted_price = round(book.discount - (book.discount * discount_percentage / 100))
             else:
                 book.discounted_price = book.discount
-    
-    calculate_discounted_price(new_books)
-    
-    # Получение всех жанров (для фильтров на странице каталога)
+
+    calculate_discounted_price(books)
+
+    # Получение всех жанров для меню
     genres = Book.objects.values_list('genre', flat=True).distinct()
-    
+
     return render(request, 'catalog.html', {
-        'new_books': new_books,
+        'books': books,
         'genres': genres,
+        'query': query,
         'current_genre': genre,
     })
 

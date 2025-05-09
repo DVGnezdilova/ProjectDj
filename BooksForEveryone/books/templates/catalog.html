@@ -85,19 +85,23 @@
           <!-- Основная навигация -->
           <nav class="d-flex gap-5 fs-5 position-relative">
             <!-- Каталог с выпадающим меню -->
-            <div class="dropdown">
-                <a href="#" class="text-decoration-none text-dark dropdown-toggle fs-5" id="catalogDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    Каталог
-                </a>
-                <!-- Выпадающее меню -->
-                <ul class="dropdown-menu genre-dropdown" aria-labelledby="catalogDropdown">
-                    {% for genre in genres %}
-                        <li><a class="dropdown-item genre-item" href="#">{{ genre }}</a></li>
-                    {% empty %}
+                <div class="dropdown">
+                    <a href="#" class="text-decoration-none text-dark dropdown-toggle fs-5" id="catalogDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Каталог
+                    </a>
+                    <!-- Выпадающее меню -->
+                    <ul class="dropdown-menu genre-dropdown" aria-labelledby="catalogDropdown">
+                        {% for g in genres %}
+                        <li>
+                            <a class="dropdown-item genre-item" href="{% url 'catalog' g %}{% if query %}?q={{ query }}{% endif %}">
+                                {{ g }}
+                            </a>
+                        </li>
+                        {% empty %}
                         <li><a class="dropdown-item disabled" href="#">Нет доступных жанров</a></li>
-                    {% endfor %}
-                </ul>
-            </div>
+                        {% endfor %}
+                    </ul>
+                </div>
             <a href="{% url 'journal' %}" class="text-decoration-none text-dark">Журнал</a>
             <a href="#" class="text-decoration-none text-dark">Издательства</a>
         </nav>
@@ -120,48 +124,43 @@
 
         <section class="mb-5">
             <h2 class="text-center mb-4">{{ current_genre }}</h2>
+            <form class="d-flex justify-content-center my-3" method="get" action="{% url 'catalog' current_genre|default:'' %}">
+                <input type="text" name="q" class="form-control" placeholder="Поиск по названию или автору" style="width: 400px;" value="{{ query|default:'' }}">
+            </form>
             <div class="catalog">
                 <div class="container">
+                    {% if query %}
+                        <p class="text-center mb-3">Найдено: {{ books|length }} по запросу "{{ query }}"</p>
+                    {% endif %}
                     <div class="row row-equal-height">
                         <!-- Цикл для вывода книг -->
-                        {% for book in new_books %}
-                            <div class="col-md-3 mb-4">
-                                <div class="products-inside d-flex flex-column h-100">
-                                    <!-- Изображение книги -->
-                                    <div class="products-img">
-                                        <img src="{{ book.photo }}" alt="{{ book.title }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
-                                    </div>
-                                    <!-- Детали книги -->
-                                    <div class="products-details flex-grow-1 d-flex flex-column">
-                                        <!-- Название книги -->
-                                        <h4 class="book-title text-center">{{ book.title }}</h4>
-                                        <!-- Автор(ы) -->
-                                        <p class="author text-center small text-muted">
-                                            {% for writer in book.id_writer.all %}
-                                                {{ writer.nickname }}
-                                                {% if not forloop.last %}, {% endif %}
-                                            {% endfor %}
-                                        </p>
-                                        <!-- Цены -->
-                                        <div class="price-container mt-auto d-flex justify-content-between">
-                                            <span class="old-price text-decoration-line-through small text-muted px-1">{{ book.discount }}&#8381;</span>
-                                            <span class="new-price fw-bold">{{ book.discounted_price }}&#8381;</span>
-                                            {% if book.sale %}
-                                                <span class="discount-badge bg-danger text-white px-1">{{ book.sale }}%</span>
-                                            {% endif %}
-                                        </div>
-                                        <!-- Кнопка "Купить" -->
-                                        <a class="buy-btn my-3 d-block text-center" href="/vh" style="text-decoration: none;">
-                                            <span>Купить</span>
-                                        </a>
-                                    </div>
+                        <div class="row g-4 justify-content-center">
+                        {% for book in books %}
+                        <div class="col-12 col-md-3">
+                            <div class="card h-100 d-flex flex-column">
+                                <img src="{{ book.photo }}" class="card-img-top" alt="{{ book.title }}">
+                                <div class="card-body flex-grow-1 d-flex flex-column justify-content-between">
+                                    <h5 class="card-title">{{ book.title }}</h5>
+                                    <p class="card-text small text-muted">
+                                        {% for writer in book.id_writer.all %}
+                                            {{ writer.nickname }}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </p>
+                                    <p class="card-text">{{ book.description|truncatewords:15 }}</p>
+                                    <a href="#" class="btn btn-secondary w-100">Подробнее</a>
                                 </div>
                             </div>
+                        </div>
                         {% empty %}
-                            <!-- Если книг нет -->
-                            <div class="col-12">
-                                <p class="text-center">Ничего не найдено</p>
+                        <div class="col-12 text-center mt-5">
+                            <div class="alert alert-info fs-4 text-muted" role="alert">
+                                {% if query %}
+                                    Ничего не найдено по запросу "{{ query }}".
+                                {% else %}
+                                    Книг в этом жанре пока нет.
+                                {% endif %}
                             </div>
+                        </div>
                         {% endfor %}
                     </div>
                 </div>
