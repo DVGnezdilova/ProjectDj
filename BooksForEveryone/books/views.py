@@ -6,6 +6,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from django.db.models import Q
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 def index(request):
 
@@ -180,11 +181,13 @@ def journal(request):
 
 def catalog(request, genre=None):
     query = request.GET.get('q', '')  # Получаем поисковый запрос
+    page = request.GET.get('page', 1)  # Получаем номер страницы
 
+    # Фильтрация по жанру и поиску
     if genre:
-        books = Book.objects.filter(genre=genre).prefetch_related('id_writer')
+        books = Book.objects.filter(genre=genre)
     else:
-        books = Book.objects.all().prefetch_related('id_writer')
+        books = Book.objects.all()
 
     if query:
         books = books.filter(
@@ -192,8 +195,17 @@ def catalog(request, genre=None):
             Q(id_writer__nickname__icontains=query)
         ).distinct()
 
+    # Пагинация
+    paginator = Paginator(books, 4)  # 2 элемента на странице
+    try:
+        page_obj = paginator.page(page)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
     # Расчет цены со скидкой
-    for book in books:
+    for book in page_obj:
         if book.sale:
             discount_percentage = int(book.sale)
             book.discounted_price = round(book.discount - (book.discount * discount_percentage / 100))
@@ -203,9 +215,8 @@ def catalog(request, genre=None):
     genres = Book.objects.values_list('genre', flat=True).distinct()
 
     return render(request, 'catalog.html', {
-        'books': books,
+        'page_obj': page_obj,
         'genres': genres,
         'query': query,
         'current_genre': genre,
-    })  
-
+    })
