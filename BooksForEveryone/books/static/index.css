@@ -25,6 +25,11 @@ header {
     height: 700px;
     border-radius: 0px;
 }
+
+.sidebar{
+    z-index: 1;
+}
+
 .dropdown-menu.genre-dropdown {
     font-size: 1.2rem; /* Увеличиваем размер шрифта */
 }

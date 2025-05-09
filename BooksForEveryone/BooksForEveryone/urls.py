@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from books.views import index, vhod, regist, avtoriz, journal, catalog
+from books.views import index, vhod, regist, avtoriz, journal, catalog, publishers_list 
 from django.urls import include, path
 
 urlpatterns = [
@@ -27,6 +27,7 @@ urlpatterns = [
     path('avtoriz/', avtoriz, name='avtoriz.html'),
     path('journal/', journal, name='journal'),
     path('catalog/<str:genre>/', catalog, name='catalog'),
+    path('publishers/', publishers_list, name='publishers'),
     path('__debug__/', include('debug_toolbar.urls')),
 ]
 

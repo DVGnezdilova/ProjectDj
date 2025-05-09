@@ -1,8 +1,8 @@
 from django.db.models import Avg
-from .models import Book, Article
+from .models import Book, Article, PublishingHouse
 from django.contrib.auth.models import User
 
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from django.db.models import Q
@@ -175,7 +175,7 @@ def journal(request):
 
     return render(request, 'journal.html', {
         'articles': articles,
-        'genres': genres,  # ✅ Передаем жанры в шаблон
+        'genres': genres,  # Передаем жанры в шаблон
         'query': query,
     })
 
@@ -220,3 +220,42 @@ def catalog(request, genre=None):
         'query': query,
         'current_genre': genre,
     })
+
+def publishers_list(request):
+    # Получаем все издательства
+    publishers = PublishingHouse.objects.all()
+
+    # Функция расчета цены (можно вынести в utils.py для переиспользования)
+    def calculate_discounted_price(books_list):
+        for book in books_list:
+            if book.sale:
+                discount_percentage = int(book.sale)
+                book.discounted_price = round(book.discount - (book.discount * discount_percentage / 100))
+            else:
+                book.discounted_price = book.discount
+
+    # Создаем список издательств с лучшими книгами
+    publishers_with_books = []
+    genres = Book.objects.values_list('genre', flat=True).distinct()
+    for publisher in publishers:
+        best_books = list(Book.objects.filter(id_publish=publisher).order_by('-year')[:3])
+ # Превращаем в список
+        calculate_discounted_price(best_books)  # Рассчитываем скидки
+        publishers_with_books.append({
+            'publisher': publisher,
+            'best_books': best_books,
+        })
+
+    return render(request, 'publishers.html', {
+        'publishers_with_books': publishers_with_books,
+        'genres': genres
+    })
+
+
+# def publisher_detail(request, pk):
+#     publisher = get_object_or_404(PublishingHouse, pk=pk)
+#     best_books = Book.objects.filter(id_publish=publisher)[:6]  # Лучшие книги
+#     return render(request, 'publisher_detail.html', {
+#         'publisher': publisher,
+#         'best_books': best_books,
+#     })

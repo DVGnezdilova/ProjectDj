@@ -1,0 +1,198 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Издательства</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'index.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.min.css">
+</head>
+<body>
+
+<!-- Шапка -->
+      <header class="bg-light p-2">
+        <div class="container">
+          <!-- Верхняя строка с мелкими ссылками -->
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="small text-muted d-flex align-items-center">
+                <a href="#" id="supportButton" class="text-decoration-none text-muted me-2 fs-6">Обратная связь</a>
+                <!-- Модальное окно -->
+                <div id="modal" class="modal">
+                    <div class="modal-content">
+                        <span class="close">&times;</span>
+                        <p class="mx-3">
+                            Данный раздел находится в разработке, приносим свои извинения. Скоро можно будет отправлять сообщения напрямую в техническую поддержку, а пока вы можете позвонить на бесплатный номер <strong>+7 990 088 22 00</strong> или же написать нам на почту <a href="mailto:books4everyone@mail.ru">books4everyone@mail.ru</a>.
+                        </p>
+                    </div>
+                </div>
+                <span class="text-muted mx-2">|</span>
+                <a href="#" class="text-decoration-none text-muted fs-6">Наши магазины</a>
+            </div>
+            <div class="d-flex gap-3">
+                <a href="{% url 'vhod' %}" class="navbt btn p-0" name="vhod"><b><u>Войти</u></b></a>
+            </div> 
+        </div>
+      
+          <!-- Название сайта -->
+          <div class="text-center mb-3">
+            <h1 class="m-0 fs-2 fw-bold"><a href="{% url 'index' %}" name="index" class="text-decoration-none text-dark">Books For Everyone</a></h1>
+          </div>
+      
+          <!-- Основная навигация -->
+          <nav class="d-flex gap-5 fs-5 position-relative">
+            <!-- Каталог с выпадающим меню -->
+                <div class="dropdown">
+                    <a href="#" class="text-decoration-none text-dark dropdown-toggle fs-5" id="catalogDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Каталог
+                    </a>
+                    <!-- Выпадающее меню -->
+                    <ul class="dropdown-menu genre-dropdown" aria-labelledby="catalogDropdown">
+                            {% for genre in genres %}
+                            <li>
+                                <a class="dropdown-item genre-item" href="{% url 'catalog' genre %}">{{ genre }}</a>
+                            </li>
+                            {% empty %}
+                            <li><a class="dropdown-item disabled" href="#">Нет доступных жанров</a></li>
+                            {% endfor %}
+                    </ul>
+                </div>
+            <a href="{% url 'journal' %}" class="text-decoration-none text-dark">Журнал</a>
+            <a href="#" class="text-decoration-none text-dark">Издательства</a>
+        </nav>
+        </div>
+      </header>
+
+<!-- Главное содержимое -->
+<main class="container mt-4">
+    <div class="row">
+        <!-- Левая панель с фильтром издательств -->
+        <div class="col-md-3 sidebar sticky-top">
+            <h4>Издательства</h4>
+            <ul>
+                {% for item in publishers_with_books %}
+                <li><h5>
+                    <a href="#{{ item.publisher.name_publish }}" class="text-decoration-none">
+                        {{ item.publisher.name_publish }}
+                    </a>
+                </h5></li>
+                {% empty %}
+                <li><a class="disabled" href="#">Нет доступных издательств</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Основной контент -->
+        <div class="col-md-9">
+            <!-- Хлебные крошки -->
+            <nav aria-label="Breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'index' %}" name="index"><b>Главная</b></a></li>
+                    <li class="breadcrumb-item">Издательства</li>
+                </ol>
+            </nav>
+
+            <!-- Информация об издательстве -->
+            <!-- Информация об издательстве -->
+            <div class="mt-5">
+                {% for item in publishers_with_books %}
+                    <div id="{{ item.publisher.name_publish }}">
+                        <h1 class="d-flex justify-content-center">{{ item.publisher.name_publish }}</h1>
+                        <img src="{{ item.publisher.photo_publish }}" alt="{{ item.publisher.name_publish }}" class="img-fluid mb-3" style="width: 876px">
+                        <p>{{ item.publisher.publish_description }}</p>
+
+                        <!-- Лучшие книги -->
+                        <h3 class="d-flex justify-content-center">Лучшие книги</h3>
+                        <div class="row row-cols-1 row-cols-md-3 g-4">
+                            {% for book in item.best_books %}
+                                <div class="col">
+                                    <div class="products-inside d-flex flex-column h-100">
+                                        <div class="products-img d-flex justify-content-center">
+                                            <img src="{{ book.photo }}" alt="{{ book.title }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
+                                        </div>
+                                        <div class="products-details flex-grow-1 d-flex flex-column">
+                                            <h4 class="book-title text-center">{{ book.title }}</h4>
+                                            <p class="author text-center small text-muted">
+                                                {% for writer in book.id_writer.all %}
+                                                    {{ writer.nickname }}{% if not forloop.last %}, {% endif %}
+                                                {% endfor %}
+                                            </p>
+                                            <div class="price-container mt-auto d-flex justify-content-between">
+                                                <span class="old-price text-decoration-line-through small text-muted px-1">{{ book.discount }}&#8381;</span>
+                                                <span class="new-price fw-bold">{{ book.discounted_price }}&#8381;</span>
+                                                {% if book.sale %}
+                                                    <span class="discount-badge bg-danger text-white px-1">{{ book.sale }}%</span>
+                                                {% endif %}
+                                            </div>
+                                            <a class="buy-btn my-3 d-block text-center" href="/vh" style="text-decoration: none;">
+                                                <span>Купить</span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% empty %}
+                                <div class="col-12 text-center">
+                                    <p>У этого издательства пока нет книг.</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <hr>
+                {% endfor %}
+            </div>
+</main>
+
+<!-- Подвал -->
+<footer class="bg-light p-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <p class="mb-3">Где ещё нас можно найти:</p>
+                <div class="d-flex gap-3">
+                    <button class="btn btn-light"><i class="bi bi-facebook"></i></button>
+                    <button class="btn btn-light"><i class="bi bi-youtube"></i></button>
+                </div>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <p class="mb-3">Хотите получать рассылку о новинках? Укажите вашу почту!</p>
+                <form>
+                    <div class="input-group">
+                        <input type="email" class="form-control" placeholder="ivanov.ivan@mail.ru" aria-label="Email input with button addon">
+                        <button class="btn btn-secondary" type="button"><i class="bi bi-arrow-right"></i></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap @5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <script> 
+        document.addEventListener("DOMContentLoaded", function () {
+        const modal = document.getElementById('modal');
+        const supportButton = document.getElementById('supportButton');
+        const closeButton = document.querySelector('.close');
+
+        if (!modal || !supportButton || !closeButton) {
+            console.error("Элементы модального окна не найдены");
+            return;
+        }
+
+        supportButton.addEventListener('click', () => {
+            modal.style.display = 'block';
+        });
+
+        closeButton.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target === modal) {
+            modal.style.display = 'none';
+            }
+        });
+        });
+    </script>
+</body>
+</html>
