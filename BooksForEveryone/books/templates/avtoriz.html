@@ -31,8 +31,8 @@
                 <a href="#" class="text-decoration-none text-muted fs-6">Наши магазины</a>
             </div>
             <div class="d-flex gap-3">
-                <button class="navbt btn btn-light px-2"><i class="bi bi-heart-fill"></i></button>
-                <button class="navbt btn btn-light px-2"><i class="bi bi-cart"></i></button>
+                <a href="{% url 'favourite' %}"  class="navbt btn btn-light px-2"><i class="bi bi-heart-fill"></i></a>
+                <a href="{% url 'shopcart' %}" class="navbt btn btn-light px-2"><i class="bi bi-cart"></i></a>
                 <a class="bi bi-person-fill navbt btn btn-light px-2" name="vhod"></a>  
             </div> 
         </div>
@@ -52,14 +52,14 @@
                 <!-- Выпадающее меню -->
                 <ul class="dropdown-menu genre-dropdown" aria-labelledby="catalogDropdown">
                     {% for genre in genres %}
-                        <li><a class="dropdown-item genre-item" href="#">{{ genre }}</a></li>
+                        <li><a class="dropdown-item genre-item" href="{% url 'catalog2' genre %}" name="catalog" >{{ genre }}</a></li>
                     {% empty %}
                         <li><a class="dropdown-item disabled" href="#">Нет доступных жанров</a></li>
                     {% endfor %}
                 </ul>
             </div>
-            <a href="#" class="text-decoration-none text-dark">Журнал</a>
-            <a href="#" class="text-decoration-none text-dark">Издательства</a>
+            <a href="{% url 'journal2' %}" class="text-decoration-none text-dark">Журнал</a>
+            <a href="{% url 'publishers2' %}" class="text-decoration-none text-dark fs-5">Издательства</a>
         </nav>
         </div>
       </header>
@@ -174,10 +174,14 @@
                                                 <span class="discount-badge bg-danger text-white px-1">{{ book.sale }}%</span>
                                             {% endif %}
                                         </div>
+                                        <div class="d-flex justify-content-between mt-3">
+                                        
                                         <!-- Кнопка "Купить" -->
-                                        <a class="buy-btn my-3 d-block text-center" href="/vh" style="text-decoration: none;">
-                                            <span>Купить</span>
+                                        <a href="{% url 'add_to_cart' book.id %}" class="btn btn-outline-primary w-100 me-2">В корзину</a>
+                                        <a href="{% url 'add_to_favourite' book.id %}" class="btn btn-outline-danger w-100 ms-2">
+                                            <i class="bi bi-heart"></i>
                                         </a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

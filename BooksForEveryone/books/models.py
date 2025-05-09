@@ -79,6 +79,7 @@ CITIES_CHOICES = (
     ('Луховицы', 'Луховицы'),
     ('Лыткарино', 'Лыткарино'),
     ('Можайск', 'Можайск'),
+    ('Москва', 'Москва'),
     ('Мытищи', 'Мытищи'),
     ('Наро-Фоминск', 'Наро-Фоминск'),
     ('Ногинск', 'Ногинск'),
@@ -243,7 +244,7 @@ class ShoppingCart(models.Model):   #расчет цены на прям сай�
         verbose_name_plural = "Корзина"
     
     def __str__(self):
-        return self.id_book
+        return f"{self.id_book.title} — {self.count_cart} шт."
     
 class Favourite(models.Model):    
     id_user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="id_us",null=False, blank=False)
@@ -254,7 +255,7 @@ class Favourite(models.Model):
         verbose_name_plural = "Избранное"
 
     def __str__(self):
-        return self.id_book
+        return self.id_book.title 
 
 class Order(models.Model):   #ДОП УСЛОВИЕ ДЛЯ АДМИНКИ: СТАТУС ЗАКАЗА НЕ МОЖЕТ БЫТЬ НА СБОРКЕ, ПОКА СУММА ЗАКАЗА = 0        это валидация)))))
     date_ord = models.DateField(auto_now_add=True,verbose_name="Дата заказа", null=False, blank=False)    

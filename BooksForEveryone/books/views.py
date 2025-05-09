@@ -1,5 +1,5 @@
 from django.db.models import Avg
-from .models import Book, Article, PublishingHouse
+from .models import Book, Article, PublishingHouse, ShoppingCart, Favourite, Shop
 from django.contrib.auth.models import User
 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -7,13 +7,15 @@ from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from django.db.models import Q
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 
 def index(request):
 
     # Фильтрация книг для "Новинок"
     new_books = Book.objects.filter(
         year__year=2025  # Книги, выпущенные в 2024 году
-    ).prefetch_related('id_writer')
+    ).prefetch_related('id_writer')[:4] 
 
     # Расчет цены со скидкой для всех книг
     def calculate_discounted_price(books):
@@ -58,7 +60,7 @@ def vhod(request):
         auth_user = authenticate(username=user.username, password=password)
         if auth_user is not None:
             login(request, auth_user)
-            return redirect('avtoriz.html')  # Перенаправляем на страницу авторизованного пользователя
+            return redirect('avtoriz')  # Перенаправляем на страницу авторизованного пользователя
         else:
             messages.error(request, "Неправильный пароль.")
             return redirect('vhod')
@@ -123,16 +125,17 @@ def regist(request):
 
     # return render(request, 'regist.html')
 
+
 def avtoriz(request):
     # Фильтрация книг для "Персональных рекомендаций"
     recommended_books = Book.objects.filter(
         genre="Фэнтези"  # Книги жанра "Фантастика"
-    ).prefetch_related('id_writer')
+    ).prefetch_related('id_writer')[:4] 
 
     # Фильтрация книг для "Новинок"
     new_books = Book.objects.filter(
         year__year=2025  # Книги, выпущенные в 2024 году
-    ).prefetch_related('id_writer')
+    ).prefetch_related('id_writer')[:4] 
 
     # Расчет цены со скидкой для всех книг
     def calculate_discounted_price(books):
@@ -252,6 +255,204 @@ def publishers_list(request):
     })
 
 
+def journal2(request):
+    query = request.GET.get('q', '')  # Получаем поисковый запрос
+
+    if query:
+        # Ищем совпадения в заголовках или текстах статей
+        articles = Article.objects.filter(
+            Q(title_article__icontains=query) | Q(text_article__icontains=query)
+        )
+    else:
+        # Если поисковый запрос пустой — показываем все статьи
+        articles = Article.objects.all()
+
+    # Получение всех жанров для выпадающего меню каталога
+    genres = Book.objects.values_list('genre', flat=True).distinct()
+
+    return render(request, 'journal2.html', {
+        'articles': articles,
+        'genres': genres,  # Передаем жанры в шаблон
+        'query': query,
+    })
+
+def catalog2(request, genre=None):
+    query = request.GET.get('q', '')  # Получаем поисковый запрос
+    page = request.GET.get('page', 1)  # Получаем номер страницы
+
+    # Фильтрация по жанру и поиску
+    if genre:
+        books = Book.objects.filter(genre=genre)
+    else:
+        books = Book.objects.all()
+
+    if query:
+        books = books.filter(
+            Q(title__icontains=query) | 
+            Q(id_writer__nickname__icontains=query)
+        ).distinct()
+
+    # Пагинация
+    paginator = Paginator(books, 4)  # 2 элемента на странице
+    try:
+        page_obj = paginator.page(page)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    # Расчет цены со скидкой
+    for book in page_obj:
+        if book.sale:
+            discount_percentage = int(book.sale)
+            book.discounted_price = round(book.discount - (book.discount * discount_percentage / 100))
+        else:
+            book.discounted_price = book.discount
+
+    genres = Book.objects.values_list('genre', flat=True).distinct()
+
+    return render(request, 'catalog2.html', {
+        'page_obj': page_obj,
+        'genres': genres,
+        'query': query,
+        'current_genre': genre,
+    })
+
+def publishers_list2(request):
+    # Получаем все издательства
+    publishers = PublishingHouse.objects.all()
+
+    # Функция расчета цены (можно вынести в utils.py для переиспользования)
+    def calculate_discounted_price(books_list):
+        for book in books_list:
+            if book.sale:
+                discount_percentage = int(book.sale)
+                book.discounted_price = round(book.discount - (book.discount * discount_percentage / 100))
+            else:
+                book.discounted_price = book.discount
+
+    # Создаем список издательств с лучшими книгами
+    publishers_with_books = []
+    genres = Book.objects.values_list('genre', flat=True).distinct()
+    for publisher in publishers:
+        best_books = list(Book.objects.filter(id_publish=publisher).order_by('-year')[:3])
+ # Превращаем в список
+        calculate_discounted_price(best_books)  # Рассчитываем скидки
+        publishers_with_books.append({
+            'publisher': publisher,
+            'best_books': best_books,
+        })
+
+    return render(request, 'publishers2.html', {
+        'publishers_with_books': publishers_with_books,
+        'genres': genres
+    })
+
+
+
+def shopcart(request):
+    # Получаем книги из корзины
+    cart_items = ShoppingCart.objects.filter(id_user=request.user).select_related('id_book')
+
+    total_price = 0
+    items_with_prices = []
+    genres = Book.objects.values_list('genre', flat=True).distinct()
+
+    for item in cart_items:
+        book = item.id_book
+        quantity = int(item.count_cart)
+
+        if book.sale:
+            discount_percentage = int(book.sale)
+            discounted_price = round(book.discount * (1 - discount_percentage / 100))
+        else:
+            discounted_price = book.discount
+
+        total_item_price = discounted_price * quantity
+
+        items_with_prices.append({
+            'item': item,
+            'book': book,
+            'quantity': quantity,
+            'discounted_price': discounted_price,
+            'total_item_price': total_item_price,
+        })
+
+        total_price += total_item_price
+
+    # Получаем все магазины для выпадающего списка
+    shops = Shop.objects.all()
+    for shop in shops:
+        if ',' in shop.street:
+            shop.street_short = shop.street.split(',', 1)[0]
+        else:
+            shop.street_short = shop.street
+
+    return render(request, 'shopcart.html', {
+        'items_with_prices': items_with_prices,
+        'total_price': total_price,
+        'genres': genres,
+        'shops': shops,  # Передаем в шаблон
+    })
+
+def remove_from_cart(request, item_id):
+    cart_item = get_object_or_404(ShoppingCart, id=item_id, id_user=request.user)
+    cart_item.delete()
+    return HttpResponseRedirect(reverse('shopcart'))
+
+def add_to_cart(request, book_id):
+    book = get_object_or_404(Book, id=book_id)
+    
+    if request.user.is_authenticated:
+        cart_item, created = ShoppingCart.objects.get_or_create(
+            id_user=request.user,
+            id_book=book,
+            defaults={'count_cart': '1'}
+        )
+        if not created:
+            cart_item.count_cart = str(int(cart_item.count_cart) + 1)
+            cart_item.save()
+
+    return HttpResponseRedirect(reverse('avtoriz'))  # или любая другая страница
+
+def favourite(request):
+    # Получаем все записи из избранного пользователя
+    fav_items = Favourite.objects.filter(id_user=request.user).select_related('id_book')
+    genres = Book.objects.values_list('genre', flat=True).distinct()
+
+    # Функция расчета цены со скидкой
+    def calculate_discounted_price(books):
+        for book in books:
+            if book.sale:
+                discount_percentage = int(book.sale)
+                book.discounted_price = round(book.discount - (book.discount * discount_percentage / 100))
+                book.sale = int(book.sale)
+            else:
+                book.discounted_price = book.discount
+
+    # Создаем список книг из избранного
+    books = [item.id_book for item in fav_items]
+    
+    # Применяем расчет цен
+    calculate_discounted_price(books)
+
+    return render(request, 'favourite.html', {
+        'fav_items': fav_items,
+        'genres': genres
+    })
+
+def remove_from_favourite(request, item_id):
+    fav_item = get_object_or_404(Favourite, id=item_id, id_user=request.user)
+    fav_item.delete()
+    return HttpResponseRedirect(reverse('favourite'))
+
+def add_to_favourite(request, book_id):
+    book = get_object_or_404(Book, id=book_id)
+
+    if request.user.is_authenticated:
+        Favourite.objects.get_or_create(id_user=request.user, id_book=book)
+
+    return HttpResponseRedirect(reverse('avtoriz'))
 # def publisher_detail(request, pk):
 #     publisher = get_object_or_404(PublishingHouse, pk=pk)
 #     best_books = Book.objects.filter(id_publish=publisher)[:6]  # Лучшие книги

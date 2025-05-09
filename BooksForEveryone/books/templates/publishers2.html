@@ -31,13 +31,15 @@
                 <a href="#" class="text-decoration-none text-muted fs-6">Наши магазины</a>
             </div>
             <div class="d-flex gap-3">
-                <a href="{% url 'vhod' %}" class="navbt btn p-0" name="vhod"><b><u>Войти</u></b></a>
+                <a href="{% url 'favourite' %}"  class="navbt btn btn-light px-2"><i class="bi bi-heart-fill"></i></a>
+                <a href="{% url 'shopcart' %}" class="navbt btn btn-light px-2"><i class="bi bi-cart"></i></a>
+                <a class="bi bi-person-fill navbt btn btn-light px-2" name="vhod"></a>  
             </div> 
         </div>
       
           <!-- Название сайта -->
           <div class="text-center mb-3">
-            <h1 class="m-0 fs-2 fw-bold"><a href="{% url 'index' %}" name="index" class="text-decoration-none text-dark">Books For Everyone</a></h1>
+            <h1 class="m-0 fs-2 fw-bold"><a href="{% url 'avtoriz' %}" name="index" class="text-decoration-none text-dark">Books For Everyone</a></h1>
           </div>
       
           <!-- Основная навигация -->
@@ -51,14 +53,14 @@
                     <ul class="dropdown-menu genre-dropdown" aria-labelledby="catalogDropdown">
                             {% for genre in genres %}
                             <li>
-                                <a class="dropdown-item genre-item" href="{% url 'catalog' genre %}">{{ genre }}</a>
+                                <a class="dropdown-item genre-item" href="{% url 'catalog2' genre %}">{{ genre }}</a>
                             </li>
                             {% empty %}
                             <li><a class="dropdown-item disabled" href="#">Нет доступных жанров</a></li>
                             {% endfor %}
                     </ul>
                 </div>
-            <a href="{% url 'journal' %}" class="text-decoration-none text-dark">Журнал</a>
+            <a href="{% url 'journal2' %}" class="text-decoration-none text-dark">Журнал</a>
             <a href="#" class="text-decoration-none text-dark">Издательства</a>
         </nav>
         </div>
@@ -88,7 +90,7 @@
             <!-- Хлебные крошки -->
             <nav aria-label="Breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{% url 'index' %}" name="index"><b>Главная</b></a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'avtoriz' %}" name="index"><b>Главная</b></a></li>
                     <li class="breadcrumb-item">Издательства</li>
                 </ol>
             </nav>

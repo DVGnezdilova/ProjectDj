@@ -30,13 +30,15 @@
                 <a href="#" class="text-decoration-none text-muted fs-6">Наши магазины</a>
             </div>
             <div class="d-flex gap-3">
-                <a href="{% url 'vhod' %}" class="navbt btn p-0" name="vhod"><b><u>Войти</u></b></a>
+                <a href="{% url 'favourite' %}"  class="navbt btn btn-light px-2"><i class="bi bi-heart-fill"></i></a>
+                <a href="{% url 'shopcart' %}" class="navbt btn btn-light px-2"><i class="bi bi-cart"></i></a>
+                <a class="bi bi-person-fill navbt btn btn-light px-2" name="vhod"></a>  
             </div> 
         </div>
       
           <!-- Название сайта -->
           <div class="text-center mb-3">
-            <h1 class="m-0 fs-2 fw-bold"><a href="{% url 'index' %}" name="index" class="text-decoration-none text-dark">Books For Everyone</a></h1>
+            <h1 class="m-0 fs-2 fw-bold"><a href="{% url 'avtoriz' %}" name="index" class="text-decoration-none text-dark">Books For Everyone</a></h1>
           </div>
       
           <!-- Основная навигация -->
@@ -50,7 +52,7 @@
                     <ul class="dropdown-menu genre-dropdown" aria-labelledby="catalogDropdown">
                         {% for g in genres %}
                         <li>
-                            <a class="dropdown-item genre-item" href="{% url 'catalog' g %}{% if query %}?q={{ query }}{% endif %}">
+                            <a class="dropdown-item genre-item" href="{% url 'catalog2' g %}{% if query %}?q={{ query }}{% endif %}">
                                 {{ g }}
                             </a>
                         </li>
@@ -59,8 +61,8 @@
                         {% endfor %}
                     </ul>
                 </div>
-            <a href="{% url 'journal' %}" class="text-decoration-none text-dark">Журнал</a>
-            <a href="{% url 'publishers' %}" class="text-decoration-none text-dark">Издательства</a>
+            <a href="{% url 'journal2' %}" class="text-decoration-none text-dark">Журнал</a>
+            <a href="{% url 'publishers2' %}" class="text-decoration-none text-dark">Издательства</a>
         </nav>
         </div>
       </header>
@@ -74,14 +76,14 @@
                 <!-- Хлебные крошки -->
                 <nav aria-label="Breadcrumb">
                     <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{% url 'index' %}" name="index"><b>Главная</b></a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'avtoriz' %}" name="index"><b>Главная</b></a></li>
                         <li class="breadcrumb-item">Каталог - {{ current_genre }}</li>
                     </ol>
                 </nav>
 
         <section class="mb-5">
             <h2 class="text-center mb-4">{{ current_genre }}</h2>
-            <form class="d-flex justify-content-center my-3" method="get" action="{% url 'catalog' current_genre|default:'' %}">
+            <form class="d-flex justify-content-center my-3" method="get" action="{% url 'catalog2' current_genre|default:'' %}">
                 <input type="text" name="q" class="form-control" placeholder="Поиск по названию или автору" style="width: 400px;" value="{{ query|default:'' }}">
             </form>
             <div class="catalog">
@@ -92,7 +94,7 @@
                             <div class="products-inside d-flex flex-column h-100">
                                 <!-- Изображение книги -->
                                 <div class="products-img">
-                                    <img src="{{ book.photo }}" alt="{{ book.title }}" style="width: 100%; height: 400px; object-fit: cover; border-radius: 8px;">
+                                    <img src="{{ book.photo }}" alt="{{ book.title }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
                                 </div>
                                 <!-- Детали книги -->
                                 <div class="products-details flex-grow-1 d-flex flex-column">

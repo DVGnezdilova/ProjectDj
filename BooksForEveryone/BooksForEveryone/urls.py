@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from books.views import index, vhod, regist, avtoriz, journal, catalog, publishers_list 
+from books.views import index, vhod, regist, avtoriz, journal, catalog, publishers_list, journal2, catalog2, publishers_list2, shopcart, remove_from_cart, add_to_cart,favourite,remove_from_favourite, add_to_favourite
 from django.urls import include, path
 
 urlpatterns = [
@@ -24,10 +24,19 @@ urlpatterns = [
     path('', index, name='index'),
     path('vhod/', vhod, name='vhod'),
     path('regist/', regist, name='regist'),
-    path('avtoriz/', avtoriz, name='avtoriz.html'),
+    path('avtoriz/', avtoriz, name='avtoriz'),
     path('journal/', journal, name='journal'),
     path('catalog/<str:genre>/', catalog, name='catalog'),
     path('publishers/', publishers_list, name='publishers'),
+    path('journal2/', journal2, name='journal2'),
+    path('catalog2/<str:genre>/', catalog2, name='catalog2'),
+    path('publishers2/', publishers_list2, name='publishers2'),
+    path('shopcart/', shopcart, name='shopcart'),
+    path('shopcart/remove/<int:item_id>/', remove_from_cart, name='remove_from_cart'),
+    path('cart/add/<int:book_id>/', add_to_cart, name='add_to_cart'),
+    path('favourite/', favourite, name='favourite'),
+    path('favourite/remove/<int:item_id>/', remove_from_favourite, name='remove_from_favourite'),
+    path('favourite/add/<int:book_id>/', add_to_favourite, name='add_to_favourite'),
     path('__debug__/', include('debug_toolbar.urls')),
 ]
 

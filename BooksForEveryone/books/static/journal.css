@@ -145,6 +145,8 @@ ul {
     margin-top: auto; /* Прижимаем кнопку к низу */
 }
 
+
+
 .carousel-inner img {
     height: 500px;
     object-fit: cover;
