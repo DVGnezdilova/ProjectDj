@@ -279,7 +279,7 @@ class Order(models.Model):   #ДОП УСЛОВИЕ ДЛЯ АДМИНКИ: СТ�
     
 
 class OrderItem(models.Model): 
-    no_ord = models.ForeignKey(Order, on_delete=models.CASCADE, verbose_name="Номер заказа (id)", related_name='orderitem',null=False, blank=False) #можно делать вызов кодом всех элементов order.orderitem.all() все позиции с номером заказа
+    no_ord = models.ForeignKey(Order, on_delete=models.CASCADE, verbose_name="Номер заказа (id)", related_name='items',null=False, blank=False) #можно делать вызов кодом всех элементов order.orderitem.all() все позиции с номером заказа
     id_book = models.ForeignKey(Book, on_delete=models.CASCADE, verbose_name="id_bk", related_name='orderitem',null=False, blank=False) #можно делать вызов кодом всех элементов books.orderitem.all() все позиции с конкретной книгой 
     count_ord = models.CharField(max_length=2, choices=COUNT_CHOICES, verbose_name="Количество",null=False, blank=False)
      

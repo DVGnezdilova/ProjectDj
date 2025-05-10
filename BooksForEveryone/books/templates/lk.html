@@ -91,29 +91,49 @@
                 <div id="orders" class="tab-pane fade show active">
                     <h2 class="d-flex justify-content-center">Ваши заказы</h2>
                     {% if orders %}
-                                    {% for order in orders %}
-                                        <div class="card mb-3">
-                                            <div class="card-header">
-                                                Заказ #{{ order.id }} • {{ order.date_ord|date:"d.m.Y" }}
-                                            </div>
-                                            <div class="card-body">
-                                                <p><strong>Статус:</strong> {{ order.status_ord }}</p>
-                                                <p><strong>Сумма:</strong> {{ order.price }} ₽</p>
+                        {% for order in orders %}
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    Заказ #{{ order.id }} • {{ order.date_ord|date:"d.m.Y" }}
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>Статус:</strong> {{ order.status_ord }}</p>
+                                    <p><strong>Сумма:</strong> {{ order.total_order_price }} ₽</p>
 
-                                                <h6>Книги в заказе:</h6>
-                                                <ul>
-                                                    {% for item in order.orderitem.all %}
-                                                        <li>{{ item.id_book.title }} × {{ item.count_ord }} </li>
-                                                    {% endfor %}
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    {% endfor %}
-
+                                    <h6>Книги в заказе:</h6>
+                                    <ul class="list-group list-group-flush mt-3">
+                                        {% for item in order.items_list %}
+                                            <li class="list-group-item d-flex align-items-center justify-content-between py-2">
+                                                <div class="d-flex align-items-center">
+                                                    <img src="{{ item.id_book.photo }}" alt="{{ item.id_book.title }}" style="width: 80px; height: auto;" class="me-3">
+                                                    <div>
+                                                        <h6 class="mb-0">{{ item.id_book.title }}</h6>
+                                                        <small class="text-muted">
+                                                            {% for writer in item.id_book.id_writer.all %}
+                                                                {{ writer.nickname }}{% if not forloop.last %}, {% endif %}
+                                                            {% endfor %}
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                                <div class="text-end">
+                                                    <span class="d-block fw-bold">
+                                                        {{ item.final_price }} × {{ item.count_ord }}
+                                                    </span>
+                                                    <span class="d-block text-success fw-bold">
+                                                        Итого: {{ item.total_price }} ₽
+                                                    </span>
+                                                </div>
+                                            </li>
+                                        {% empty %}
+                                            <p class="text-muted">Нет книг в этом заказе</p>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        {% endfor %}
                     {% else %}
-                        <p>У вас нет заказов.</p>
+                        <div class="alert alert-info">У вас нет заказов.</div>
                     {% endif %}
-                </div>
 
             </div>
         </div>

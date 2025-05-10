@@ -549,12 +549,51 @@ def add_to_favourite(request, book_id):
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
 def lk(request):
-    # Получаем все заказы пользователя
-    orders = Order.objects.filter(id_user=request.user).order_by('-date_ord')
+    # Получаем все заказы пользователя + предзагрузка связанных данных
+    orders = Order.objects.filter(id_user=request.user).prefetch_related(
+        'items__id_book', 
+        'items__id_book__id_writer'
+    ).order_by('-date_ord')
+
+    try:
+        account = Account.objects.get(user=request.user)
+    except Account.DoesNotExist:
+        account = None
+
+    # Расчёт цен для книг в заказах
+    for order in orders:
+        order_items = order.items.all()
+        order.total_order_price = 0
+
+        for item in order_items:
+            book = item.id_book
+
+            if book.sale and book.sale.isdigit():
+                discount_percentage = int(book.sale)
+                final_price = round(book.discount * (1 - discount_percentage / 100))
+            else:
+                final_price = book.discount
+
+            item.final_price = final_price
+            item.total_price = final_price * int(item.count_ord)
+            order.total_order_price += item.total_price
+        
+
+        order.items_list = order_items 
+        
+    genres = Book.objects.values_list('genre', flat=True).distinct()
+    cart_count = 0
+    if request.user.is_authenticated:
+        cart_count = ShoppingCart.objects.filter(id_user=request.user).count() # Можно передать как отдельное свойство
 
     return render(request, 'lk.html', {
         'orders': orders,
+        'account': account,
+        'genres': genres,
+        'cart_count': cart_count
     })
+
+
 
 def profile(request):
     # Получаем все заказы пользователя
@@ -565,9 +604,16 @@ def profile(request):
         account = Account.objects.get(user=user)
     except Account.DoesNotExist:
         account = None
+    
+    genres = Book.objects.values_list('genre', flat=True).distinct()
+    cart_count = 0
+    if request.user.is_authenticated:
+        cart_count = ShoppingCart.objects.filter(id_user=request.user).count()
 
     return render(request, 'profile.html', {
         'account': account,
+        'genres': genres,
+        'cart_count': cart_count
     })
 
 
@@ -593,11 +639,15 @@ def reviews(request):
 
     # Получаем все отзывы пользователя
     reviews = Review.objects.filter(id_user=request.user).select_related('id_book')
+    genres = Book.objects.values_list('genre', flat=True).distinct()
+    cart_count = 0
+    if request.user.is_authenticated:
+        cart_count = ShoppingCart.objects.filter(id_user=request.user).count()
 
     return render(request, 'reviews.html', {
-
         'reviews': reviews,
-
+        'genres': genres,
+        'cart_count': cart_count
     })
 
 
