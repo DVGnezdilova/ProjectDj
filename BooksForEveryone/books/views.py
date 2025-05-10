@@ -128,49 +128,43 @@ def regist(request):
 
 
 def avtoriz(request):
-    # Фильтрация книг для "Персональных рекомендаций"
-    recommended_books = Book.objects.filter(
-        genre="Фэнтези"  # Книги жанра "Фантастика"
-    ).prefetch_related('id_writer')[:4] 
+    # Получаем книги
+    recommended_books = Book.objects.filter(genre="Фэнтези").prefetch_related('id_writer')[:4]
+    new_books = Book.objects.filter(year__year=2025).prefetch_related('id_writer')[:4]
 
-    # Фильтрация книг для "Новинок"
-    new_books = Book.objects.filter(
-        year__year=2025  # Книги, выпущенные в 2024 году
-    ).prefetch_related('id_writer')[:4] 
-
-    # Расчет цены со скидкой для всех книг
+    # Расчет цен со скидкой
     def calculate_discounted_price(books):
         for book in books:
-            # Расчет цены со скидкой с округлением до целых чисел
             if book.sale:
                 discount_percentage = int(book.sale)
                 book.discounted_price = round(book.discount - (book.discount * discount_percentage / 100))
             else:
                 book.discounted_price = book.discount
 
-    # Применяем расчет цены со скидкой к обоим наборам книг
     calculate_discounted_price(recommended_books)
     calculate_discounted_price(new_books)
 
-    # Получение уникальных жанров из базы данных
     genres = Book.objects.values_list('genre', flat=True).distinct()
+    
     fav_user = []
+    cart_books_ids = []
     cart_count = 0
+
     if request.user.is_authenticated:
         fav_user = list(Favourite.objects.filter(id_user=request.user).values_list('id_book__id', flat=True))
+        cart_books_ids = list(
+            ShoppingCart.objects.filter(id_user=request.user).values_list('id_book__id', flat=True)
+        )
         cart_count = ShoppingCart.objects.filter(id_user=request.user).count()
-    else:
-        fav_user = []
 
-    # Передаем данные в шаблон
     return render(request, 'avtoriz.html', {
         'recommended_books': recommended_books,
         'new_books': new_books,
-        'genres': genres,  # Добавляем жанры в контекст
+        'genres': genres,
         'user_fav_books': fav_user,
-        'cart_count': cart_count
+        'cart_books_ids': cart_books_ids, 
+        'cart_count': cart_count # ← Передаем в шаблон
     })
-
 
 
 def journal(request):
@@ -286,12 +280,14 @@ def journal2(request):
     if request.user.is_authenticated:
         cart_count = ShoppingCart.objects.filter(id_user=request.user).count()
 
+
     return render(request, 'journal2.html', {
         'articles': articles,
         'genres': genres,  # Передаем жанры в шаблон
         'query': query,
         'cart_count': cart_count
     })
+
 
 def catalog2(request, genre=None):
     query = request.GET.get('q', '')  # Получаем поисковый запрос
@@ -327,6 +323,7 @@ def catalog2(request, genre=None):
             book.discounted_price = book.discount
 
     genres = Book.objects.values_list('genre', flat=True).distinct()
+    cart_books_ids = []
     fav_user = []
     cart_count = 0
     if request.user.is_authenticated:
@@ -334,6 +331,9 @@ def catalog2(request, genre=None):
             Favourite.objects.filter(id_user=request.user).values_list('id_book__id', flat=True)
         )
         cart_count = ShoppingCart.objects.filter(id_user=request.user).count()
+        cart_books_ids = list(
+            ShoppingCart.objects.filter(id_user=request.user).values_list('id_book__id', flat=True)
+        )
     else:
         fav_user = []
 
@@ -343,8 +343,10 @@ def catalog2(request, genre=None):
         'query': query,
         'current_genre': genre,
         'user_fav_books': fav_user,
+        'cart_books_ids': cart_books_ids, 
         'cart_count': cart_count
     })
+
 
 def publishers_list2(request):
     # Получаем все издательства
@@ -372,10 +374,14 @@ def publishers_list2(request):
         })
     
     fav_user = []
+    cart_books_ids = []
     cart_count = 0
     if request.user.is_authenticated:
         fav_user = list(Favourite.objects.filter(id_user=request.user).values_list('id_book__id', flat=True))
         cart_count = ShoppingCart.objects.filter(id_user=request.user).count()
+        cart_books_ids = list(
+            ShoppingCart.objects.filter(id_user=request.user).values_list('id_book__id', flat=True)
+        )
     else:
         fav_user = []
 
@@ -383,9 +389,9 @@ def publishers_list2(request):
         'publishers_with_books': publishers_with_books,
         'genres': genres,
         'user_fav_books': fav_user, 
+        'cart_books_ids': cart_books_ids, 
         'cart_count': cart_count
     })
-
 
 
 def shopcart(request):
@@ -395,6 +401,7 @@ def shopcart(request):
     total_price = 0
     items_with_prices = []
     genres = Book.objects.values_list('genre', flat=True).distinct()
+    
 
     for item in cart_items:
         book = item.id_book
@@ -443,7 +450,10 @@ def cart_change_quantity(request, item_id, action):
     quantity = int(cart_item.count_cart)
 
     if action == 'increase':
-        quantity += 1
+        if quantity >= 5:
+            messages.warning(request, "Нельзя добавить больше 5 шт.")
+        else:
+            quantity += 1
     elif action == 'decrease' and quantity > 1:
         quantity -= 1
 
@@ -452,14 +462,16 @@ def cart_change_quantity(request, item_id, action):
 
     return HttpResponseRedirect(reverse('shopcart'))
 
-def remove_from_cart(request, item_id):
+
+def remove_from_cart(request, item_id):  # ← Обязательно должен быть item_id
     cart_item = get_object_or_404(ShoppingCart, id=item_id, id_user=request.user)
     cart_item.delete()
     return HttpResponseRedirect(reverse('shopcart'))
 
+
 def add_to_cart(request, book_id):
     book = get_object_or_404(Book, id=book_id)
-    
+
     if request.user.is_authenticated:
         cart_item, created = ShoppingCart.objects.get_or_create(
             id_user=request.user,
@@ -467,10 +479,17 @@ def add_to_cart(request, book_id):
             defaults={'count_cart': '1'}
         )
         if not created:
-            cart_item.count_cart = str(int(cart_item.count_cart) + 1)
-            cart_item.save()
+            # Если книга уже есть в корзине — не увеличиваем количество
+            pass
 
-    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))  # или любая другая страница
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+
+def remove_from_cart_by_book_id(request, book_id):
+    if request.user.is_authenticated:
+        # Удаляем все записи корзины с данной книгой
+        ShoppingCart.objects.filter(id_user=request.user, id_book__id=book_id).delete()
+
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
 def favourite(request):
     # Получаем все записи из избранного пользователя
@@ -527,10 +546,3 @@ def add_to_favourite(request, book_id):
 
     # Возвращаем пользователя туда, откуда он пришёл
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
-# def publisher_detail(request, pk):
-#     publisher = get_object_or_404(PublishingHouse, pk=pk)
-#     best_books = Book.objects.filter(id_publish=publisher)[:6]  # Лучшие книги
-#     return render(request, 'publisher_detail.html', {
-#         'publisher': publisher,
-#         'best_books': best_books,
-#     })

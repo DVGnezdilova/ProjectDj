@@ -74,6 +74,13 @@
     <!-- Main Content -->
   <!-- Главное содержимое -->
 <main class="container mt-4">
+    {% if messages %}
+        <div class="container mt-3">
+            {% for message in messages %}
+                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
     <h2 class="mb-4 text-center">Ваша корзина</h2>
 
     {% if items_with_prices %}
@@ -107,9 +114,15 @@
 
                                 <!-- Кнопки +/- -->
                                 <div class="d-flex align-items-center">
-                                        <a href="{% url 'cart_change_quantity' item_data.item.id 'decrease' %}" class="btn btn-outline-secondary btn-sm">−</a>
-                                        <span class="mx-2">{{ item_data.item.count_cart }}</span>
+                                    <a href="{% url 'cart_change_quantity' item_data.item.id 'decrease' %}" class="btn btn-outline-secondary btn-sm">−</a>
+                                    <span class="mx-2">{{ item_data.item.count_cart }}</span>
+
+                                    {% if item_data.quantity == 1 or item_data.quantity == 2 or item_data.quantity == 3 or item_data.quantity == 4  or item_data.quantity == 5%}
                                         <a href="{% url 'cart_change_quantity' item_data.item.id 'increase' %}" class="btn btn-outline-secondary btn-sm">+</a>
+                                    {% else %}
+                                        <button class="btn btn-outline-secondary btn-sm" disabled>+</button>
+                                    {% endif %}
+
                                     <a href="{% url 'remove_from_cart' item_data.item.id %}" class="btn btn-danger btn-sm ms-2 mx-2">Удалить</a>
                                 </div>
                             </div>

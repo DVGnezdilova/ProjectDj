@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from books.views import index, vhod, regist, avtoriz, journal, catalog, publishers_list, journal2, catalog2, publishers_list2, shopcart,cart_change_quantity, remove_from_cart, add_to_cart,favourite,remove_from_favourite, add_to_favourite
+from books.views import index, vhod, regist, avtoriz, journal, catalog, publishers_list, journal2, catalog2, publishers_list2, shopcart,cart_change_quantity, remove_from_cart, add_to_cart,favourite,remove_from_favourite, add_to_favourite, remove_from_cart_by_book_id
 from django.urls import include, path
 
 urlpatterns = [
@@ -35,6 +35,7 @@ urlpatterns = [
     path('cart/change-quantity/<int:item_id>/<str:action>/', cart_change_quantity, name='cart_change_quantity'),
     path('shopcart/remove/<int:item_id>/', remove_from_cart, name='remove_from_cart'),
     path('cart/add/<int:book_id>/', add_to_cart, name='add_to_cart'),
+    path('cart/remove/book/<int:book_id>/', remove_from_cart_by_book_id, name='remove_from_cart_by_book'),
     path('favourite/', favourite, name='favourite'),
     path('favourite/remove/<int:item_id>/', remove_from_favourite, name='remove_from_favourite'),
     path('favourite/add/<int:book_id>/', add_to_favourite, name='add_to_favourite'),
