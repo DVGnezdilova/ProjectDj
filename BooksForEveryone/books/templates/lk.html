@@ -1,0 +1,173 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Издательства</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'index.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.min.css">
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+<!-- Шапка -->
+      <header class="bg-light p-2">
+        <div class="container">
+          <!-- Верхняя строка с мелкими ссылками -->
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="small text-muted d-flex align-items-center">
+                <a href="#" id="supportButton" class="text-decoration-none text-muted me-2 fs-6">Обратная связь</a>
+                <!-- Модальное окно -->
+                <div id="modal" class="modal">
+                    <div class="modal-content">
+                        <span class="close">&times;</span>
+                        <p class="mx-3">
+                            Данный раздел находится в разработке, приносим свои извинения. Скоро можно будет отправлять сообщения напрямую в техническую поддержку, а пока вы можете позвонить на бесплатный номер <strong>+7 990 088 22 00</strong> или же написать нам на почту <a href="mailto:books4everyone@mail.ru">books4everyone@mail.ru</a>.
+                        </p>
+                    </div>
+                </div>
+                <span class="text-muted mx-2">|</span>
+                <a href="#" class="text-decoration-none text-muted fs-6">Наши магазины</a>
+            </div>
+            <div class="d-flex gap-3">
+                <a href="{% url 'favourite' %}"  class="navbt btn btn-light px-2"><i class="bi bi-heart-fill"></i></a>
+                <a href="{% url 'shopcart' %}" class="navbt btn btn-light px-2 position-relative">
+                    <i class="bi bi-cart"></i>
+                    {% if cart_count > 0 %}
+                        <span class="position-absolute top-0 mt-1 translate-middle badge rounded-pill bg-danger" style="font-size: 0.75rem;">
+                            {{ cart_count }}
+                        </span>
+                    {% endif %}
+                </a>
+                <a class="bi bi-person-fill navbt btn btn-light px-2" name="vhod"></a>  
+            </div> 
+        </div>
+      
+          <!-- Название сайта -->
+          <div class="text-center mb-3">
+            <h1 class="m-0 fs-2 fw-bold"><a href="{% url 'avtoriz' %}" name="index" class="text-decoration-none text-dark">Books For Everyone</a></h1>
+          </div>
+      
+          <!-- Основная навигация -->
+          <nav class="d-flex gap-5 fs-5 position-relative">
+            <!-- Каталог с выпадающим меню -->
+                <div class="dropdown">
+                    <a href="#" class="text-decoration-none text-dark dropdown-toggle fs-5" id="catalogDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Каталог
+                    </a>
+                    <!-- Выпадающее меню -->
+                    <ul class="dropdown-menu genre-dropdown" aria-labelledby="catalogDropdown">
+                            {% for genre in genres %}
+                            <li>
+                                <a class="dropdown-item genre-item" href="{% url 'catalog2' genre %}">{{ genre }}</a>
+                            </li>
+                            {% empty %}
+                            <li><a class="dropdown-item disabled" href="#">Нет доступных жанров</a></li>
+                            {% endfor %}
+                    </ul>
+                </div>
+            <a href="{% url 'journal2' %}" class="text-decoration-none text-dark">Журнал</a>
+            <a href="{% url 'publishers2' %}" class="text-decoration-none text-dark">Издательства</a>
+        </nav>
+        </div>
+      </header>
+
+    <main class="container mt-4 flex-grow-1">
+        <div class="row">
+            <!-- Боковое меню -->
+            <div class="col-md-3 mb-4">
+                <div class="list-group">
+                    <a href="#" class="list-group-item list-group-item-action active" data-bs-toggle="list">Заказы</a>
+                    <a href="{% url 'profile' %}" class="list-group-item list-group-item-action" data-bs-toggle="list">Личные данные</a>
+                    <a href="{% url 'reviews' %}" class="list-group-item list-group-item-action" data-bs-toggle="list">Мои отзывы</a>
+                    <a href="{% url 'logout' %}" class="list-group-item list-group-item-action text-danger">Выйти</a>
+                </div>
+            </div>
+
+            <!-- Основное содержимое -->
+            <div class="col-md-9 flex-grow-1">
+                <!-- Вкладка: Заказы -->
+                <div id="orders" class="tab-pane fade show active">
+                    <h2 class="d-flex justify-content-center">Ваши заказы</h2>
+                    {% if orders %}
+                                    {% for order in orders %}
+                                        <div class="card mb-3">
+                                            <div class="card-header">
+                                                Заказ #{{ order.id }} • {{ order.date_ord|date:"d.m.Y" }}
+                                            </div>
+                                            <div class="card-body">
+                                                <p><strong>Статус:</strong> {{ order.status_ord }}</p>
+                                                <p><strong>Сумма:</strong> {{ order.price }} ₽</p>
+
+                                                <h6>Книги в заказе:</h6>
+                                                <ul>
+                                                    {% for item in order.orderitem.all %}
+                                                        <li>{{ item.id_book.title }} × {{ item.count_ord }} </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+
+                    {% else %}
+                        <p>У вас нет заказов.</p>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-light p-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-3">Где ещё нас можно найти:</p>
+                    <div class="d-flex gap-3">
+                        <button class="btn btn-light"><i class="bi bi-facebook"></i></button>
+                        <button class="btn btn-light"><i class="bi bi-youtube"></i></button>
+                    </div>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-3">Хотите получать рассылку о новинках? Укажите вашу почту!</p>
+                    <form>
+                        <div class="input-group">
+                            <input type="email" class="form-control" placeholder="ivanov.ivan@mail.ru" aria-label="Email input with button addon">
+                            <button class="btn btn-secondary" type="button"><i class="bi bi-arrow-right"></i></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap @5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <script> 
+        document.addEventListener("DOMContentLoaded", function () {
+        const modal = document.getElementById('modal');
+        const supportButton = document.getElementById('supportButton');
+        const closeButton = document.querySelector('.close');
+
+        if (!modal || !supportButton || !closeButton) {
+            console.error("Элементы модального окна не найдены");
+            return;
+        }
+
+        supportButton.addEventListener('click', () => {
+            modal.style.display = 'block';
+        });
+
+        closeButton.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target === modal) {
+            modal.style.display = 'none';
+            }
+        });
+        });
+    </script>
+</body>
+</html>

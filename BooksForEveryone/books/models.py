@@ -269,11 +269,13 @@ class Order(models.Model):   #ДОП УСЛОВИЕ ДЛЯ АДМИНКИ: СТ�
         blank=True,             # Поле необязательно для заполнения
         verbose_name="Чек"
     )
-        
     class Meta:
         verbose_name = "заказ"
         verbose_name_plural = "Заказы"
         ordering = ['-date_ord']  # Сортировка по дате создания (новые сверху)
+
+    def __str__(self):
+        return f"{self.id}"
     
 
 class OrderItem(models.Model): 
@@ -286,7 +288,7 @@ class OrderItem(models.Model):
         verbose_name_plural = "Позиции заказов"
 
     def __str__(self):
-        return self.no_ord
+        return f"{self.no_ord}"
 
 #      !!!!! НЕ РАБОТАЕТ!!!!!!
 
@@ -342,5 +344,5 @@ class Review(models.Model):
         ordering = ['-created_at']  # сортировка по дате создания (новые сверху), !!! убрала потому что есть в модальном менеджере выше 
 
     def __str__(self):
-        return self.id_user
+        return f"Отзыв от пользователя {self.id_user}"
 

@@ -1,5 +1,5 @@
 from django.db.models import Avg
-from .models import Book, Article, PublishingHouse, ShoppingCart, Favourite, Shop
+from .models import Book, Article, PublishingHouse, ShoppingCart, Favourite, Shop, Order, Review, Account
 from django.contrib.auth.models import User
 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -9,6 +9,7 @@ from django.db.models import Q
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+from django.contrib.auth import logout
 
 
 def index(request):
@@ -546,3 +547,60 @@ def add_to_favourite(request, book_id):
 
     # Возвращаем пользователя туда, откуда он пришёл
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+
+def lk(request):
+    # Получаем все заказы пользователя
+    orders = Order.objects.filter(id_user=request.user).order_by('-date_ord')
+
+    return render(request, 'lk.html', {
+        'orders': orders,
+    })
+
+def profile(request):
+    # Получаем все заказы пользователя
+
+    user = request.user
+
+    try:
+        account = Account.objects.get(user=user)
+    except Account.DoesNotExist:
+        account = None
+
+    return render(request, 'profile.html', {
+        'account': account,
+    })
+
+
+def update_profile(request):
+    account = Account.objects.get(user=request.user)
+
+    if request.method == 'POST':
+        account.surname = request.POST.get('surname', account.surname)
+        account.name = request.POST.get('name', account.name)
+        account.birthday = request.POST.get('birthday')
+
+        if 'photo_acc' in request.FILES:
+            account.photo_acc = request.FILES['photo_acc']
+
+        account.save()
+        return redirect('profile')
+
+    return render(request, 'profile.html', {'account': account})
+
+
+def reviews(request):
+
+
+    # Получаем все отзывы пользователя
+    reviews = Review.objects.filter(id_user=request.user).select_related('id_book')
+
+    return render(request, 'reviews.html', {
+
+        'reviews': reviews,
+
+    })
+
+
+def custom_logout(request):
+    logout(request)
+    return redirect('avtoriz')  # или 'index'

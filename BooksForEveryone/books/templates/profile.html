@@ -1,0 +1,256 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Издательства</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'index.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.min.css">
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+<!-- Шапка -->
+      <header class="bg-light p-2">
+        <div class="container">
+          <!-- Верхняя строка с мелкими ссылками -->
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="small text-muted d-flex align-items-center">
+                <a href="#" id="supportButton" class="text-decoration-none text-muted me-2 fs-6">Обратная связь</a>
+                <!-- Модальное окно -->
+                <div id="modal" class="modal">
+                    <div class="modal-content">
+                        <span class="close">&times;</span>
+                        <p class="mx-3">
+                            Данный раздел находится в разработке, приносим свои извинения. Скоро можно будет отправлять сообщения напрямую в техническую поддержку, а пока вы можете позвонить на бесплатный номер <strong>+7 990 088 22 00</strong> или же написать нам на почту <a href="mailto:books4everyone@mail.ru">books4everyone@mail.ru</a>.
+                        </p>
+                    </div>
+                </div>
+                <span class="text-muted mx-2">|</span>
+                <a href="#" class="text-decoration-none text-muted fs-6">Наши магазины</a>
+            </div>
+            <div class="d-flex gap-3">
+                <a href="{% url 'favourite' %}"  class="navbt btn btn-light px-2"><i class="bi bi-heart-fill"></i></a>
+                <a href="{% url 'shopcart' %}" class="navbt btn btn-light px-2 position-relative">
+                    <i class="bi bi-cart"></i>
+                    {% if cart_count > 0 %}
+                        <span class="position-absolute top-0 mt-1 translate-middle badge rounded-pill bg-danger" style="font-size: 0.75rem;">
+                            {{ cart_count }}
+                        </span>
+                    {% endif %}
+                </a>
+                <a class="bi bi-person-fill navbt btn btn-light px-2" name="vhod"></a>  
+            </div> 
+        </div>
+      
+          <!-- Название сайта -->
+          <div class="text-center mb-3">
+            <h1 class="m-0 fs-2 fw-bold"><a href="{% url 'avtoriz' %}" name="index" class="text-decoration-none text-dark">Books For Everyone</a></h1>
+          </div>
+      
+          <!-- Основная навигация -->
+          <nav class="d-flex gap-5 fs-5 position-relative">
+            <!-- Каталог с выпадающим меню -->
+                <div class="dropdown">
+                    <a href="#" class="text-decoration-none text-dark dropdown-toggle fs-5" id="catalogDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Каталог
+                    </a>
+                    <!-- Выпадающее меню -->
+                    <ul class="dropdown-menu genre-dropdown" aria-labelledby="catalogDropdown">
+                            {% for genre in genres %}
+                            <li>
+                                <a class="dropdown-item genre-item" href="{% url 'catalog2' genre %}">{{ genre }}</a>
+                            </li>
+                            {% empty %}
+                            <li><a class="dropdown-item disabled" href="#">Нет доступных жанров</a></li>
+                            {% endfor %}
+                    </ul>
+                </div>
+            <a href="{% url 'journal2' %}" class="text-decoration-none text-dark">Журнал</a>
+            <a href="{% url 'publishers2' %}" class="text-decoration-none text-dark">Издательства</a>
+        </nav>
+        </div>
+      </header>
+
+<main class="container mt-4 flex-grow-1">
+    <div class="row">
+        <!-- Боковое меню -->
+        <div class="col-md-3 mb-4">
+            <div class="list-group">
+                <a href="{% url 'lk' %}" class="list-group-item list-group-item-action" >Заказы</a>
+                <a href="#" class="list-group-item list-group-item-action active" data-bs-toggle="list">Личные данные</a>
+                <a href="{% url 'reviews' %}" class="list-group-item list-group-item-action">Мои отзывы</a>
+                <a href="{% url 'logout' %}" class="list-group-item list-group-item-action text-danger">Выйти</a>
+            </div>
+        </div>
+
+        <!-- Основное содержимое -->
+        <div class="col-md-9">
+
+            <!-- Вкладка: Личные данные -->
+            <div id="profile" class="tab-pane fade show active">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="w-100 text-center">
+                            <h2>Личные данные</h2>
+                        </div>
+                        <button type="button" id="editProfileButton" class="btn btn-outline-primary end-0 me-5" 
+                                data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                            Редактировать
+                        </button>
+                    </div>
+
+                    {% if account %}
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    
+                                    <!-- Левый столбец: фото -->
+                                    <div class="col-md-4 text-center mb-3 mb-md-0">
+                                        {% if account.photo_acc %}
+                                            <img src="{{ account.photo_acc.url }}" alt="Фото профиля" class="img-thumbnail" style="width: 150px; height: 200px; object-fit: cover;">
+                                        {% else %}
+                                            <p class="text-muted">Фото не загружено</p>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Правый столбец: данные -->
+                                    <div class="col-md-8">
+                                        <p class="card-text"><strong>Фамилия:</strong> {{ account.surname }}</p>
+                                        <p class="card-text"><strong>Имя:</strong> {{ account.name }}</p>
+                                        <p class="card-text"><strong>Дата рождения:</strong> {{ account.birthday|date:"d.m.Y" }}</p>
+                                        <p class="card-text"><strong>Номер телефона (логин):</strong> {{ user.username }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">Данные профиля пока не заполнены.</div>
+                    {% endif %}
+
+            </div>
+
+
+        </div>
+    </div>
+</main>
+<!-- Модальное окно для редактирования профиля -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="post" enctype="multipart/form-data" action="{% url 'update_profile' %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editProfileModalLabel">Редактирование личных данных</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+
+                        <!-- Левый столбец: фото -->
+                        <div class="col-md-4 text-center">
+                            {% if account.photo_acc %}
+                                <img src="{{ account.photo_acc.url }}" alt="Фото профиля" class="img-thumbnail mb-3" style="width: 150px; height: auto;">
+                            {% else %}
+                                <p class="text-muted mb-3">Фото не загружено</p>
+                            {% endif %}
+                            <input type="file" name="photo_acc" class="form-control mt-2">
+                        </div>
+
+                        <!-- Правый столбец: данные -->
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="surname" class="form-label">Фамилия</label>
+                                <input type="text" id="surname" name="surname" class="form-control" value="{{ account.surname }}">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Имя</label>
+                                <input type="text" id="name" name="name" class="form-control" value="{{ account.name }}">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="birthday" class="form-label">Дата рождения</label>
+                                <input type="date" id="birthday" name="birthday" class="form-control" value="{{ account.birthday|date:'Y-m-d'|default:'' }}">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Номер телефона (логин)</label>
+                                <input type="text" class="form-control" value="{{ user.username }}" disabled>
+                                <small class="form-text text-muted">Номер телефона нельзя менять</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-success w-auto">Сохранить изменения</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<footer class="bg-light p-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <p class="mb-3">Где ещё нас можно найти:</p>
+                <div class="d-flex gap-3">
+                    <button class="btn btn-light"><i class="bi bi-facebook"></i></button>
+                    <button class="btn btn-light"><i class="bi bi-youtube"></i></button>
+                </div>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <p class="mb-3">Хотите получать рассылку о новинках? Укажите вашу почту!</p>
+                <form>
+                    <div class="input-group">
+                        <input type="email" class="form-control" placeholder="ivanov.ivan@mail.ru" aria-label="Email input with button addon">
+                        <button class="btn btn-secondary" type="button"><i class="bi bi-arrow-right"></i></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</footer>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap @5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const editProfileModal = document.getElementById('editProfileModal');
+    editProfileModal.addEventListener('hidden.bs.modal', function () {
+        location.reload();  // ← перезагрузка для обновления данных
+    });
+    document.addEventListener("DOMContentLoaded", function () {
+        const modal = document.getElementById('modal');
+        const supportButton = document.getElementById('supportButton');
+        const closeButton = document.querySelector('.close');
+
+        if (!modal || !supportButton) {
+            console.error("Элементы модального окна не найдены");
+            return;
+        }
+
+        // Открываем модальное окно при клике на "Обратная связь"
+        supportButton.addEventListener('click', () => {
+            modal.style.display = 'block';
+        });
+
+        // Закрываем при клике на крестик
+        closeButton.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        // Закрываем при клике вне окна
+        window.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    });
+</script>
+
+
+</body>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+</html>
