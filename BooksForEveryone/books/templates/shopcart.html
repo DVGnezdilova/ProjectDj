@@ -32,7 +32,14 @@
             </div>
             <div class="d-flex gap-3">
                 <a href="{% url 'favourite' %}"  class="navbt btn btn-light px-2"><i class="bi bi-heart-fill"></i></a>
-                <button class="navbt btn btn-light px-2"><i class="bi bi-cart"></i></button>
+                <a href="#" class="navbt btn btn-light px-2 position-relative">
+                    <i class="bi bi-cart"></i>
+                    {% if cart_count > 0 %}
+                        <span class="position-absolute top-0 mt-1 translate-middle badge rounded-pill bg-danger" style="font-size: 0.75rem;">
+                            {{ cart_count }}
+                        </span>
+                    {% endif %}
+                </a>
                 <a class="bi bi-person-fill navbt btn btn-light px-2" name="vhod"></a>  
             </div> 
         </div>
@@ -72,26 +79,38 @@
     {% if items_with_prices %}
         <div class="row">
 
-            <!-- Левая часть — товары -->
+            <!-- Левый столбец: товары -->
             <div class="col-md-8">
                 <div class="row g-4 mb-4">
                     {% for item_data in items_with_prices %}
-                        <div class="col-12">
-                            <div class="card h-100 d-flex flex-row">
-                                <img src="{{ item_data.book.photo }}" alt="{{ item_data.book.title }}" style="width: 150px; height: auto; object-fit: cover;" class="me-3">
-                                <div class="card-body d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h5 class="card-title">{{ item_data.book.title }}</h5>
-                                        <p class="card-text text-muted mb-1">
-                                            {% for writer in item_data.book.id_writer.all %}
-                                                {{ writer.nickname }}{% if not forloop.last %}, {% endif %}
-                                            {% endfor %}
-                                        </p>
-                                        <p class="card-text fw-bold mb-0">
-                                            {{ item_data.discounted_price }} × {{ item_data.item.count_cart }} = {{ item_data.total_item_price }} ₽
-                                        </p>
-                                    </div>
-                                    <a href="{% url 'remove_from_cart' item_data.item.id %}" class="btn btn-danger btn-sm">Удалить</a>
+                        <div class="col-12 mb-3">
+                            <div class="card h-100 d-flex flex-row align-items-center">
+                                <img src="{{ item_data.book.photo }}" alt="{{ item_data.book.title }}"
+                                     style="width: 150px; height: auto; object-fit: cover;"
+                                     class="me-3 rounded">
+                                <div class="flex-grow-1">
+                                    <h5 class="card-title mb-1">{{ item_data.book.title }}</h5>
+                                    <p class="card-text text-muted small mb-1">
+                                        {% for writer in item_data.book.id_writer.all %}
+                                            {{ writer.nickname }}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </p>
+                                    <p class="card-text fw-bold mb-1">
+                                        Cкидка: <span class="discount-badge bg-danger text-white px-1">{{  item_data.book.sale }}% </span> 
+                                    </p>
+                                    <p class="card-text fw-bold mb-0">
+                                        {{ item_data.discounted_price }} × 
+                                        <span class="mx-2">{{ item_data.item.count_cart }}</span> = 
+                                        {{ item_data.total_item_price }} ₽
+                                    </p>
+                                </div>
+
+                                <!-- Кнопки +/- -->
+                                <div class="d-flex align-items-center">
+                                        <a href="{% url 'cart_change_quantity' item_data.item.id 'decrease' %}" class="btn btn-outline-secondary btn-sm">−</a>
+                                        <span class="mx-2">{{ item_data.item.count_cart }}</span>
+                                        <a href="{% url 'cart_change_quantity' item_data.item.id 'increase' %}" class="btn btn-outline-secondary btn-sm">+</a>
+                                    <a href="{% url 'remove_from_cart' item_data.item.id %}" class="btn btn-danger btn-sm ms-2 mx-2">Удалить</a>
                                 </div>
                             </div>
                         </div>
@@ -99,14 +118,14 @@
                 </div>
             </div>
 
-            <!-- Правая часть — два блока друг под другом -->
+            <!-- Правый столбец: Итог + Оформление -->
             <div class="col-md-4">
                 
                 <!-- Блок 1: Итого -->
                 <div class="card bg-light mb-4">
                     <div class="card-body">
-                        <h4 class="card-title mb-3">Итог заказа</h4>
-                        <ul class="list-group list-group-flush mb-4">
+                        <h4 class="card-title mb-3">Итого</h4>
+                        <ul class="list-group list-group-flush mb-3">
                             <li class="list-group-item d-flex justify-content-between">
                                 <span>Товары:</span>
                                 <strong>{{ total_price }} ₽</strong>
@@ -123,24 +142,27 @@
                     </div>
                 </div>
 
-                <!-- Блок 2: Оформление -->
+                <!-- Блок 2: Оформление заказа -->
                 <div class="card bg-light mb-4">
                     <div class="card-body">
                         <h4 class="card-title mb-3">Оформление заказа</h4>
                             {% csrf_token %}
                             <div class="mb-3">
-                                <label for="deliveryMethod" class="form-label">Магазин для самовывоза: </label>
+                                <label for="deliveryMethod" class="form-label">Магазин для самовывоза:</label>
                                 <select class="form-select" id="deliveryMethod" name="delivery_method">
                                     <!-- Вариант: самовывоз -->
 
                                     <!-- Динамически добавляем магазины -->
                                     {% for shop in shops %}
-                                        <option value="{{ shop.id }}">{{ shop.city }},{{ shop.street_short }}</option>
+                                        <option value="shop_{{ shop.id }}">
+                                            {{ shop.city }}, {{ shop.street_short }}
+                                        </option>
                                     {% endfor %}
-
                                 </select>
                             </div>
+
                             <button type="submit" class="btn btn-success w-100 py-2">Оформить заказ</button>
+
                     </div>
                 </div>
             </div>
