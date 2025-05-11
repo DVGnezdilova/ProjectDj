@@ -79,8 +79,8 @@
             <div class="col-md-3 mb-4">
                 <div class="list-group">
                     <a href="#" class="list-group-item list-group-item-action active" data-bs-toggle="list">Заказы</a>
-                    <a href="{% url 'profile' %}" class="list-group-item list-group-item-action" data-bs-toggle="list">Личные данные</a>
-                    <a href="{% url 'reviews' %}" class="list-group-item list-group-item-action" data-bs-toggle="list">Мои отзывы</a>
+                    <a href="{% url 'profile' %}" class="list-group-item list-group-item-action" >Личные данные</a>
+                    <a href="{% url 'reviews' %}" class="list-group-item list-group-item-action" >Мои отзывы</a>
                     <a href="{% url 'logout' %}" class="list-group-item list-group-item-action text-danger">Выйти</a>
                 </div>
             </div>
@@ -93,9 +93,7 @@
                     {% if orders %}
                         {% for order in orders %}
                             <div class="card mb-4">
-                                <div class="card-header">
-                                    Заказ #{{ order.id }} • {{ order.date_ord|date:"d.m.Y" }}
-                                </div>
+                                <div class="card-header">Заказ #{{ order.id }} • {{ order.date_ord|date:"d.m.Y" }}</div>
                                 <div class="card-body">
                                     <p><strong>Статус:</strong> {{ order.status_ord }}</p>
                                     <p><strong>Сумма:</strong> {{ order.total_order_price }} ₽</p>
@@ -110,7 +108,8 @@
                                                         <h6 class="mb-0">{{ item.id_book.title }}</h6>
                                                         <small class="text-muted">
                                                             {% for writer in item.id_book.id_writer.all %}
-                                                                {{ writer.nickname }}{% if not forloop.last %}, {% endif %}
+                                                                {{ writer.nickname }}
+                                                                {% if not forloop.last %}, {% endif %}
                                                             {% endfor %}
                                                         </small>
                                                     </div>
@@ -122,6 +121,17 @@
                                                     <span class="d-block text-success fw-bold">
                                                         Итого: {{ item.total_price }} ₽
                                                     </span>
+
+                                                   <!-- Кнопка "Оставить отзыв" -->
+                                                    {% if order.status_ord == 'Выполнен' %}
+                                                        {% if item.has_review %}
+                                                            <small class="text-success">Отзыв оставлен</small>
+                                                        {% else %}
+                                                            <a href="#" class="btn btn-outline-primary btn-sm mt-2" data-book-id="{{ item.id_book.id }}">
+                                                                Оставить отзыв
+                                                            </a>
+                                                        {% endif %}
+                                                    {% endif %}
                                                 </div>
                                             </li>
                                         {% empty %}
@@ -132,12 +142,55 @@
                             </div>
                         {% endfor %}
                     {% else %}
-                        <div class="alert alert-info">У вас нет заказов.</div>
+                        <div class="alert alert-info d-flex justify-content-center">У вас нет заказов.</div>
                     {% endif %}
 
             </div>
         </div>
     </main>
+
+    <div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="reviewModalLabel">Оставить отзыв о книге</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <!-- Форма внутри модального окна -->
+        <form id="reviewForm" method="post" action="{% url 'add_review' %}">
+            {% csrf_token %}
+            <input type="hidden" name="book_id" id="bookIdInput">
+
+            <div class="modal-body">
+            <!-- Поле для текста отзыва -->
+            <div class="mb-3">
+                {{ form.text_review.label_tag }}
+                {{ form.text_review }}
+            </div>
+
+            <!-- Поле для рейтинга -->
+            <div class="mb-3">
+                <label for="rating" class="form-label">Оценка</label>
+                <div id="starRating" class="d-flex gap-2 fs-3 text-warning">
+                    <i class="bi bi-star" data-value="1"></i>
+                    <i class="bi bi-star" data-value="2"></i>
+                    <i class="bi bi-star" data-value="3"></i>
+                    <i class="bi bi-star" data-value="4"></i>
+                    <i class="bi bi-star" data-value="5"></i>
+                </div>
+                {{ form.rating }}
+            </div>
+            </div>
+
+            <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+            <button type="submit" class="btn btn-primary">Отправить</button>
+            </div>
+        </form>
+        </div>
+    </div>
+    </div>
 
     <footer class="bg-light p-5">
         <div class="container">
@@ -165,6 +218,92 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap @5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
     <script> 
         document.addEventListener("DOMContentLoaded", function () {
+            const modal = new bootstrap.Modal(document.getElementById('reviewModal'));
+            const form = document.getElementById('reviewForm');
+            const bookIdInput = document.getElementById('bookIdInput');
+            const stars = document.querySelectorAll('#starRating i');
+            const ratingInput = document.querySelector('input[name="rating"]');
+            let selectedRating = '';
+
+            // Звезды
+            stars.forEach(star => {
+                star.addEventListener('click', function () {
+                    selectedRating = this.getAttribute('data-value');
+                    updateStars();
+                    ratingInput.value = selectedRating;
+                });
+
+                star.addEventListener('mouseover', function () {
+                    highlightStars(this.getAttribute('data-value'));
+                });
+
+                star.addEventListener('mouseout', function () {
+                    updateStars();
+                });
+            });
+
+            function highlightStars(hoverValue) {
+                stars.forEach(star => {
+                    if (star.getAttribute('data-value') <= hoverValue) {
+                        star.classList.add('bi-star-fill');
+                        star.classList.remove('bi-star');
+                    } else {
+                        star.classList.add('bi-star');
+                        star.classList.remove('bi-star-fill');
+                    }
+                });
+            }
+
+            function updateStars() {
+                stars.forEach(star => {
+                    if (star.getAttribute('data-value') <= selectedRating) {
+                        star.classList.add('bi-star-fill');
+                        star.classList.remove('bi-star');
+                    } else {
+                        star.classList.add('bi-star');
+                        star.classList.remove('bi-star-fill');
+                    }
+                });
+            }
+
+            // Открытие модального окна + подстановка book_id
+            document.querySelectorAll('[data-book-id]').forEach(button => {
+                button.addEventListener('click', function () {
+                    const bookId = this.getAttribute('data-book-id');
+                    bookIdInput.value = bookId;
+                    modal.show();
+                });
+            });
+
+            // Отправка формы
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                // ВАЖНО: убедимся, что рейтинг выбран
+                if (!ratingInput.value) {
+                    alert("Пожалуйста, поставьте оценку");
+                    return;
+                }
+
+                const formData = new FormData(form);
+
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                }).then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert("Ошибка при отправке отзыва");
+                    }
+                }).catch(error => {
+                    console.error("Ошибка:", error);
+                    alert("Не удалось отправить отзыв. Попробуйте позже.");
+                });
+            });
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
         const modal = document.getElementById('modal');
         const supportButton = document.getElementById('supportButton');
         const closeButton = document.querySelector('.close');
@@ -190,4 +329,5 @@
         });
     </script>
 </body>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
 </html>

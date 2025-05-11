@@ -274,6 +274,12 @@ class Order(models.Model):   #ДОП УСЛОВИЕ ДЛЯ АДМИНКИ: СТ�
         verbose_name_plural = "Заказы"
         ordering = ['-date_ord']  # Сортировка по дате создания (новые сверху)
 
+    def save(self, *args, **kwargs):
+        # Если объект только создаётся (нет ID), установим статус по умолчанию
+        if not self.pk and not self.status_ord:
+            self.status_ord = 'Обрабатывается'
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.id}"
     
@@ -332,12 +338,19 @@ class Review(models.Model):
     id_user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="id_us", related_name='review',null=False, blank=False) #можно делать вызов кодом всех элементов users.review.all() все отзывы конкретного пользователя
     id_book = models.ForeignKey(Book, on_delete=models.CASCADE, verbose_name="id_bk", related_name='review',null=False, blank=False) #можно делать вызов кодом всех элементов book.review.all() все отзывы на конкретную книгу
     text_review = models.TextField(verbose_name="Текст отзыва",null=False, blank=False)
-    rating = models.CharField(max_length=2, choices=COUNT_CHOICES, verbose_name="Рейтинг",null=False, blank=True)
+    rating = models.CharField(max_length=2, choices=COUNT_CHOICES, verbose_name="Рейтинг",null=False, blank=False)
     status_rev = models.CharField(max_length=20, choices=STATUSREV_CHOICES, verbose_name="Статус",null=False, blank=False)
     created_at = models.DateTimeField(default=timezone.now, verbose_name="Время создания отзыва",null=False, blank=False)  #записывает дату создания отзыва
 
     # objects = ReviewManager()
- 
+    
+    def save(self, *args, **kwargs):
+        # Если объект только создаётся (нет ID), установим статус по умолчанию
+        if not self.pk and not self.status_rev:
+            self.status_rev = 'Обрабатывается'
+        super().save(*args, **kwargs)
+
+
     class Meta:
         verbose_name = "отзыв"
         verbose_name_plural = "Отзывы"

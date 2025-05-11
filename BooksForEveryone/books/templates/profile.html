@@ -116,9 +116,24 @@
 
                                     <!-- Правый столбец: данные -->
                                     <div class="col-md-8">
-                                        <p class="card-text"><strong>Фамилия:</strong> {{ account.surname }}</p>
-                                        <p class="card-text"><strong>Имя:</strong> {{ account.name }}</p>
-                                        <p class="card-text"><strong>Дата рождения:</strong> {{ account.birthday|date:"d.m.Y" }}</p>
+                                        {% if account.surname %}
+                                            <p class="card-text"><strong>Фамилия:</strong> {{ account.surname }}</p>
+                                        {% else %}
+                                            <p class="card-text"><strong>Фамилия:</strong></p>
+                                        {% endif %}
+
+                                        {% if account.name %}
+                                            <p class="card-text"><strong>Имя:</strong> {{ account.name }}</p>
+                                        {% else %}
+                                            <p class="card-text"><strong>Имя:</strong></p>
+                                        {% endif %}
+
+                                        {% if account.birthday %}
+                                            <p class="card-text"><strong>Дата рождения:</strong> {{ account.birthday|date:"d.m.Y" }}</p>
+                                        {% else %}
+                                            <p class="card-text"><strong>Дата рождения:</strong></p>
+                                        {% endif %}
+
                                         <p class="card-text"><strong>Номер телефона (логин):</strong> {{ user.username }}</p>
                                     </div>
                                 </div>

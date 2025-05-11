@@ -90,22 +90,51 @@
 
             <!-- Вкладка: Мои отзывы -->
             <div id="reviews" class="tab-pane fade show active">
-                <h2 class="d-flex justify-content-center">Мои отзывы</h2>
-                {% if reviews %}
-                    {% for review in reviews %}
-                        <div class="card mb-3">
-                            <div class="card-body">
-                                <h4 class="card-title">{{ review.id_book.title }}</h4>
-                                <p class="card-text">{{ review.text_review }}</p>
-                                <b class="card-status">{{ review.status_rev }}</b>
-                                <p class="text-muted small">{{ review.created_at|date:"d.m.Y H:i" }}</p>
+            <h2 class="d-flex justify-content-center">Мои отзывы</h2>
+            {% if reviews %}
+                {% for review in reviews %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h4 class="card-title">{{ review.id_book.title }}</h4>
+
+                            <!-- Звездный рейтинг -->
+                            <div class="mb-2">
+                                {% with ''|center:review.rating as range %}
+                                    {% for _ in range %}
+                                        <i class="bi bi-star-fill text-warning"></i>
+                                    {% endfor %}
+                                {% endwith %}
                             </div>
+
+                            <p class="card-text">{{ review.text_review }}</p>
+
+                            <b class="card-status 
+                                {% if review.status_rev == 'Опубликован' %}
+                                    text-success
+                                {% elif review.status_rev == 'Отказ в публикации' %}
+                                    text-danger
+                                {% endif %}">
+                                {{ review.status_rev }}
+                            </b>
+
+                            <!-- Кнопка удаления отзыва -->
+                            {% if review.status_rev == 'Опубликован' %}
+                                <form action="{% url 'delete_review' review.id %}" method="post" class="d-inline-block ms-3">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Вы уверены, что хотите удалить отзыв?')">
+                                        Удалить
+                                    </button>
+                                </form>
+                            {% endif %}
+
+                            <p class="text-muted small mt-2">{{ review.created_at|date:"d.m.Y H:i" }}</p>
                         </div>
-                    {% endfor %}
-                {% else %}
-                    <p>Вы ещё не оставили ни одного отзыва.</p>
-                {% endif %}
-            </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-info d-flex justify-content-center">Вы не оставляли отзывов</div>
+            {% endif %}
+        </div>
         </div>
     </div>
 </main>

@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path
-from books.views import index, vhod, regist, avtoriz, journal, catalog, publishers_list, journal2, catalog2, publishers_list2, shopcart,cart_change_quantity, remove_from_cart, add_to_cart,favourite,remove_from_favourite, add_to_favourite, remove_from_cart_by_book_id, lk,custom_logout, profile, update_profile, reviews
+from books.views import index, vhod, regist, avtoriz, journal, catalog, publishers_list, journal2, catalog2, publishers_list2, shopcart,cart_change_quantity, remove_from_cart, add_to_cart,favourite,remove_from_favourite, add_to_favourite, remove_from_cart_by_book_id, lk,add_review, custom_logout, profile, update_profile, reviews, delete_review
 from django.urls import include, path
 
 urlpatterns = [
@@ -42,9 +42,11 @@ urlpatterns = [
     path('favourite/remove/<int:item_id>/', remove_from_favourite, name='remove_from_favourite'),
     path('favourite/add/<int:book_id>/', add_to_favourite, name='add_to_favourite'),
     path('lk/', lk, name='lk'),
+    path('add-review/', add_review, name='add_review'),
     path('profile/', profile, name='profile'),
     path('lk/update/', update_profile, name='update_profile'),
     path('reviews/', reviews, name='reviews'),
+    path('delete-review/<int:review_id>/', delete_review, name='delete_review'),
     path('logout/', custom_logout, name='logout'),
     path('__debug__/', include('debug_toolbar.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

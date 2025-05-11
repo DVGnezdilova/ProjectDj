@@ -1,4 +1,7 @@
 from django.db.models import Avg
+
+from .forms import AccountForm
+from .forms import ReviewForm
 from .models import Book, Article, PublishingHouse, ShoppingCart, Favourite, Shop, Order, Review, Account
 from django.contrib.auth.models import User
 
@@ -551,19 +554,19 @@ def add_to_favourite(request, book_id):
 def lk(request):
     # Получаем все заказы пользователя + предзагрузка связанных данных
     orders = Order.objects.filter(id_user=request.user).prefetch_related(
-        'items__id_book', 
-        'items__id_book__id_writer'
+        'items__id_book__review',  # ← важно: prefetch по related_name='review'
     ).order_by('-date_ord')
-
     try:
         account = Account.objects.get(user=request.user)
     except Account.DoesNotExist:
         account = None
 
+    user_reviews_books = Review.objects.filter(id_user=request.user).values_list('id_book_id', flat=True)
     # Расчёт цен для книг в заказах
     for order in orders:
         order_items = order.items.all()
         order.total_order_price = 0
+        order.items_list = []
 
         for item in order_items:
             book = item.id_book
@@ -577,66 +580,148 @@ def lk(request):
             item.final_price = final_price
             item.total_price = final_price * int(item.count_ord)
             order.total_order_price += item.total_price
-        
 
-        order.items_list = order_items 
+            # Добавляем флаг наличия отзыва
+            item.has_review = book.review.filter(id_user=request.user).exists()
+
+            order.items_list.append(item)
         
     genres = Book.objects.values_list('genre', flat=True).distinct()
     cart_count = 0
     if request.user.is_authenticated:
         cart_count = ShoppingCart.objects.filter(id_user=request.user).count() # Можно передать как отдельное свойство
 
+    review_form = ReviewForm()
+
     return render(request, 'lk.html', {
         'orders': orders,
         'account': account,
         'genres': genres,
-        'cart_count': cart_count
+        'cart_count': cart_count,         
+        'user_reviews_books': user_reviews_books, 
+        'form': review_form,
     })
 
+def add_review(request):
+    if request.method == "POST":
+        book_id = request.POST.get('book_id')
+        book = get_object_or_404(Book, id=book_id)
+        existing_review = Review.objects.filter(id_book=book, id_user=request.user).exists()
+        if existing_review:
+            messages.warning(request, "Вы уже оставили отзыв на эту книгу.")
+            return redirect('lk')
 
+        form = ReviewForm(request.POST)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.id_user = request.user
+            review.id_book = book
+            review.status_rev = 'Обрабатывается'
+            review.save()
+            messages.success(request, "Ваш отзыв успешно отправлен.")
+            return redirect('lk')
+        else:
+            messages.error(request, "Ошибка при сохранении отзыва.")
+    return redirect('lk')
+
+# def lk(request):
+#     orders = Order.objects.filter(id_user=request.user).prefetch_related(
+#         'items__id_book', 
+#         'items__id_book__review_set'
+#     ).order_by('-date_ord')
+
+#     try:
+#         account = Account.objects.get(user=request.user)
+#     except Account.DoesNotExist:
+#         account = None
+
+#     # Список книг, по которым пользователь уже оставил отзыв
+#     user_reviews_books = Review.objects.filter(id_user=request.user).values_list('id_book_id', flat=True)
+
+#     for order in orders:
+#         order_items = order.items.all()
+#         order.total_order_price = 0
+#         order.items_list = []
+
+#         for item in order_items:
+#             book = item.id_book
+
+#             if book.sale and book.sale.isdigit():
+#                 discount_percentage = int(book.sale)
+#                 final_price = round(book.discount * (1 - discount_percentage / 100))
+#             else:
+#                 final_price = book.discount
+
+#             item.final_price = final_price
+#             item.total_price = final_price * int(item.count_ord)
+#             order.total_order_price += item.total_price
+
+#             # Добавляем флаг наличия отзыва
+#             item.has_review = book.id in user_reviews_books
+
+#             order.items_list.append(item)
+
+#     return render(request, 'lk.html', {
+#         'orders': orders,
+#         'account': account,
+#         'user_reviews_books': user_reviews_books
+#     })
 
 def profile(request):
-    # Получаем все заказы пользователя
-
     user = request.user
-
     try:
         account = Account.objects.get(user=user)
     except Account.DoesNotExist:
         account = None
-    
+
+    # Передаем форму для модального окна
+    form = AccountForm(instance=account)
+
     genres = Book.objects.values_list('genre', flat=True).distinct()
     cart_count = 0
     if request.user.is_authenticated:
         cart_count = ShoppingCart.objects.filter(id_user=request.user).count()
-
+    
     return render(request, 'profile.html', {
         'account': account,
         'genres': genres,
-        'cart_count': cart_count
+        'cart_count': cart_count,
+        'form': form
     })
 
+# def update_profile(request):
+#     account = Account.objects.get(user=request.user)
+
+#     if request.method == 'POST':
+#         account.surname = request.POST.get('surname', account.surname)
+#         account.name = request.POST.get('name', account.name)
+#         account.birthday = request.POST.get('birthday')
+
+#         if 'photo_acc' in request.FILES:
+#             account.photo_acc = request.FILES['photo_acc']
+
+#         account.save()
+#         return redirect('profile')
+
+#     return render(request, 'profile.html', {'account': account})
 
 def update_profile(request):
-    account = Account.objects.get(user=request.user)
+    account  = Account.objects.get(user=request.user)
 
-    if request.method == 'POST':
-        account.surname = request.POST.get('surname', account.surname)
-        account.name = request.POST.get('name', account.name)
-        account.birthday = request.POST.get('birthday')
+    if request.method == "POST":
+        form = AccountForm(request.POST, request.FILES, instance=account)
+        if form.is_valid():
+            form.save()
+            return redirect('profile')
 
-        if 'photo_acc' in request.FILES:
-            account.photo_acc = request.FILES['photo_acc']
+    else:
+        form = AccountForm(instance=account)
 
-        account.save()
-        return redirect('profile')
-
-    return render(request, 'profile.html', {'account': account})
+    # Вместо отдельного шаблона передаем в lk.html
+    return render(request, 'profile.html', {'form': form, 'account': account})
 
 
 def reviews(request):
-
-
     # Получаем все отзывы пользователя
     reviews = Review.objects.filter(id_user=request.user).select_related('id_book')
     genres = Book.objects.values_list('genre', flat=True).distinct()
@@ -650,7 +735,11 @@ def reviews(request):
         'cart_count': cart_count
     })
 
+def delete_review(request, review_id):
+    review = get_object_or_404(Review, id=review_id, id_user=request.user)
+    review.delete()
+    return redirect('reviews')
 
 def custom_logout(request):
     logout(request)
-    return redirect('avtoriz')  # или 'index'
+    return redirect('index')  # или 'index'
