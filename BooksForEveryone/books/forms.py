@@ -1,5 +1,5 @@
 from django import forms
-from .models import Book, Account, Review
+from .models import Account, Review
 
 # Форма редактирования профиля
 class AccountForm(forms.ModelForm):

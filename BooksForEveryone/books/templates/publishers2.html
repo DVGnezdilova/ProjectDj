@@ -127,6 +127,20 @@
                                                     {{ writer.nickname }}{% if not forloop.last %}, {% endif %}
                                                 {% endfor %}
                                             </p>
+                                            <div class="d-flex justify-content-center text-warning mb-2">
+                                                {% with rating=book.get_avg_rating %}
+                                                    {% for i in "12345" %}
+                                                        {% with current_rating=i|floatformat:"0"|add:"0" %}
+                                                            {% if rating >= current_rating %}
+                                                                <i class="bi bi-star-fill"></i>
+                                                            {% else %}
+                                                                
+                                                            {% endif %}
+                                                        {% endwith %}
+                                                    {% endfor %}
+                                                {% endwith %}
+                                            </div>
+
                                             <div class="price-container mt-auto d-flex justify-content-between">
                                                 <span class="old-price text-decoration-line-through small text-muted px-1">{{ book.discount }}&#8381;</span>
                                                 <span class="new-price fw-bold">{{ book.discounted_price }}&#8381;</span>

@@ -9,6 +9,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'index.css' %}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css ">
 </head>
 <body>
 
@@ -148,24 +149,22 @@
 
         <!-- Personal Recommendations -->
         <section class="mb-5">
-            <div>
-                <h2 class="text-center mb-4">Персональные рекомендации</h2>
-            </div>
+            <h2 class="text-center mb-4">Персональные рекомендации</h2>
             <div class="catalog">
-                <div class="container h-100">
-                    <div class="row"> <!-- row-equal-height -->
+                <div class="container">
+                    <div class="row row-equal-height">
                         <!-- Цикл для вывода книг -->
                         {% for book in recommended_books %}
                             <div class="col-md-3 mb-4">
                                 <div class="products-inside d-flex flex-column h-100">
                                     <!-- Изображение книги -->
                                     <div class="products-img">
-                                        <img src="{{ book.photo }}" alt="{{ book.title }}" style="width: 100%; height: 400px;  object-fit: cover; border-radius: 8px;">
+                                        <img src="{{ book.photo }}" alt="{{ book.title }}" style="width: 100%; height: 400px; object-fit: cover; border-radius: 8px;">
                                     </div>
                                     <!-- Детали книги -->
                                     <div class="products-details flex-grow-1 d-flex flex-column">
                                         <!-- Название книги -->
-                                        <h3 class="book-title text-center py-2">{{ book.title }}</h3>
+                                        <h4 class="book-title text-center">{{ book.title }}</h4>
                                         <!-- Автор(ы) -->
                                         <p class="author text-center small text-muted">
                                             {% for writer in book.id_writer.all %}
@@ -173,6 +172,21 @@
                                                 {% if not forloop.last %}, {% endif %}
                                             {% endfor %}
                                         </p>
+
+                                        <div class="d-flex justify-content-center text-warning mb-2">
+                                            {% with rating=book.get_avg_rating %}
+                                                {% for i in "12345" %}
+                                                    {% with current_rating=i|floatformat:"0"|add:"0" %}
+                                                        {% if rating >= current_rating %}
+                                                            <i class="bi bi-star-fill"></i>
+                                                        {% else %}
+                                                                
+                                                        {% endif %}
+                                                    {% endwith %}
+                                                {% endfor %}
+                                            {% endwith %}
+                                        </div>
+
                                         <!-- Цены -->
                                         <div class="price-container mt-auto d-flex justify-content-between">
                                             <span class="old-price text-decoration-line-through small text-muted px-1">{{ book.discount }}&#8381;</span>
@@ -181,15 +195,11 @@
                                                 <span class="discount-badge bg-danger text-white px-1">{{ book.sale }}%</span>
                                             {% endif %}
                                         </div>
+                                        <!-- Кнопка "Купить" -->
                                         <div class="d-flex justify-content-between mt-3">
                                         
                                         <!-- Кнопка "Купить" -->
-                                        {% if book.id in cart_books_ids %}
-                                            <a href="{% url 'remove_from_cart_by_book' book.id %}" class="btn btn-primary w-100 me-2">В корзине</a>
-                                        {% else %}
-                                            <a href="{% url 'add_to_cart' book.id %}" class="btn btn-outline-primary w-100 me-2">В корзину</a>
-                                        {% endif %}
-                                                                                
+                                        <a href="{% url 'add_to_cart' book.id %}" class="btn btn-outline-primary w-100 me-2">В корзину</a>
                                         <a href="{% url 'add_to_favourite' book.id %}"
                                         class="btn {% if book.id in user_fav_books %}btn-danger{% else %}btn-outline-danger{% endif %} w-100 ms-2">
                                             <i class="bi {% if book.id in user_fav_books %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
@@ -220,7 +230,7 @@
                                 <div class="products-inside d-flex flex-column h-100">
                                     <!-- Изображение книги -->
                                     <div class="products-img">
-                                        <img src="{{ book.photo }}" alt="{{ book.title }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
+                                        <img src="{{ book.photo }}" alt="{{ book.title }}" style="width: 100%; height: 400px; object-fit: cover; border-radius: 8px;">
                                     </div>
                                     <!-- Детали книги -->
                                     <div class="products-details flex-grow-1 d-flex flex-column">
@@ -233,6 +243,20 @@
                                                 {% if not forloop.last %}, {% endif %}
                                             {% endfor %}
                                         </p>
+                                        <div class="d-flex justify-content-center text-warning mb-2">
+                                            {% with rating=book.get_avg_rating %}
+                                                {% for i in "12345" %}
+                                                    {% with current_rating=i|floatformat:"0"|add:"0" %}
+                                                        {% if rating >= current_rating %}
+                                                            <i class="bi bi-star-fill"></i>
+                                                        {% else %}
+                                                            
+                                                        {% endif %}
+                                                    {% endwith %}
+                                                {% endfor %}
+                                            {% endwith %}
+                                        </div>
+
                                         <!-- Цены -->
                                         <div class="price-container mt-auto d-flex justify-content-between">
                                             <span class="old-price text-decoration-line-through small text-muted px-1">{{ book.discount }}&#8381;</span>
@@ -352,7 +376,7 @@
     </footer>
 
     <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script> -->
     <script>// Получаем элементы модального окна
         const modal = document.getElementById('modal');
         const supportButton = document.getElementById('supportButton');

@@ -130,7 +130,8 @@ def regist(request):
 
     # return render(request, 'regist.html')
 
-
+from django.views.decorators.cache import cache_page
+# @cache_page(60 * 15)  # кэш на 15 минут
 def avtoriz(request):
     # Получаем книги
     recommended_books = Book.objects.filter(genre="Фэнтези").prefetch_related('id_writer')[:4]

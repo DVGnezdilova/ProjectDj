@@ -2,6 +2,9 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.db.models import Avg
+from django.db.models.functions import Cast
+from django.db.models import FloatField
 
 GENRE_CHOICES = (
     ('Фэнтези', 'Фэнтези'), 
@@ -181,6 +184,13 @@ class Book(models.Model):
         verbose_name = "книгу"
         verbose_name_plural = "Книги"
 
+        #собст. функц. метод
+    def get_avg_rating(self):
+        avg = self.review.filter(status_rev='Опубликован').annotate(
+            rating_as_float=Cast('rating', output_field=FloatField())
+        ).aggregate(avg_rating=Avg('rating_as_float'))
+        return round(avg['avg_rating'], 1) if avg['avg_rating'] else 0
+    
     def __str__(self):
         return self.title
 
