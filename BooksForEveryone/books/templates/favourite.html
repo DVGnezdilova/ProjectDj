@@ -76,36 +76,37 @@
 <main class="container mt-4">
     <h2 class="mb-4 text-center">Избранное</h2>
 
-    {% if page_obj %}
-        <div class="row g-4 mb-4">
-            {% for item in page_obj %}
-                <div class="col-md-12 col-lg-6">
-                    <div class="card h-100 d-flex flex-row align-items-center">
-                        <img src="{{ item.id_book.photo }}" alt="{{ item.id_book.title }}" style="width: 150px; height: auto;" class="me-3">
-                        <div class="flex-grow-1">
-                            <h5 class="card-title">{{ item.id_book.title }}</h5>
-                            <p class="card-text text-muted small mb-1">
-                                {% for writer in item.id_book.id_writer.all %}
-                                    {{ writer.nickname }}{% if not forloop.last %}, {% endif %}
-                                {% endfor %}
-                            </p>
-                            <p class="card-text fw-bold mb-0">
-                                Скидка: 
-                                {% if item.id_book.sale %}
-                                    <span class="discount-badge bg-danger text-white px-1">{{ item.id_book.sale }}%</span><br>
-                                {% else %}
-                                    Нет<br>
-                                {% endif %}
-                                Цена: {{ item.id_book.discounted_price }} ₽
-                            </p>
-                        </div>
-
-                        <!-- Используем item.id — это id записи Favourite -->
-                        <a href="{% url 'remove_from_favourite' item.id %}" class="btn btn-danger btn-sm ms-2 mx-3">Удалить</a>
+        {% if page_obj %}
+            <div class="row g-4 mb-4">
+                {% for item in page_obj %}
+                    <div class="col-md-12 col-lg-6">
+                        <!-- Обёртка ссылкой -->
+                        <a href="{% url 'book_detail' item.id_book.id %}" class="text-decoration-none text-dark">
+                            <div class="card h-100 d-flex flex-row align-items-center">
+                                <img src="{{ item.id_book.photo }}" alt="{{ item.id_book.title }}" style="width: 150px; height: auto;" class="me-3">
+                                <div class="flex-grow-1">
+                                    <h5 class="card-title mb-1">{{ item.id_book.title }}</h5>
+                                    <p class="card-text text-muted small mb-1">
+                                        {% for writer in item.id_book.id_writer.all %}
+                                            {{ writer.nickname }}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </p>
+                                    <p class="card-text fw-bold mb-0">
+                                        Скидка:
+                                        {% if item.id_book.sale %}
+                                            <span class="badge bg-danger text-white px-1">{{ item.id_book.sale }}%</span><br>
+                                        {% else %}
+                                            Нет<br>
+                                        {% endif %}
+                                        Цена: {{ item.id_book.discounted_price }} ₽
+                                    </p>
+                                    <a href="{% url 'remove_from_favourite' item.id %}" class="btn btn-danger btn-sm me-3 my-3">Удалить</a>
+                                </div>
+                            </div>
+                        </a>
                     </div>
-                </div>
-            {% endfor %}
-        </div>
+                {% endfor %}
+            </div>
 
         <!-- Пагинация -->
         <nav aria-label="Навигация по страницам">

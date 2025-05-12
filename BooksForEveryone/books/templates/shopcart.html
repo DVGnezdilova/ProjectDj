@@ -91,28 +91,30 @@
                 <div class="row g-4 mb-4">
                     {% for item_data in items_with_prices %}
                         <div class="col-12 mb-3">
-                            <div class="card h-100 d-flex flex-row align-items-center">
-                                <img src="{{ item_data.book.photo }}" alt="{{ item_data.book.title }}"
-                                     style="width: 150px; height: auto; object-fit: cover;"
-                                     class="me-3 rounded">
-                                <div class="flex-grow-1">
-                                    <h5 class="card-title mb-1">{{ item_data.book.title }}</h5>
-                                    <p class="card-text text-muted small mb-1">
-                                        {% for writer in item_data.book.id_writer.all %}
-                                            {{ writer.nickname }}{% if not forloop.last %}, {% endif %}
-                                        {% endfor %}
-                                    </p>
-                                    <p class="card-text fw-bold mb-1">
-                                        Cкидка: <span class="discount-badge bg-danger text-white px-1">{{  item_data.book.sale }}% </span> 
-                                    </p>
-                                    <p class="card-text fw-bold mb-0">
-                                        {{ item_data.discounted_price }} × 
-                                        <span class="mx-2">{{ item_data.item.count_cart }}</span> = 
-                                        {{ item_data.total_item_price }} ₽
-                                    </p>
-                                </div>
-
-                                <!-- Кнопки +/- -->
+                                <div class="card h-100 d-flex flex-row align-items-center">
+                                    <img src="{{ item_data.book.photo }}" alt="{{ item_data.book.title }}"
+                                        style="width: 150px; height: auto; object-fit: cover;"
+                                        class="me-3 rounded"><a href="{% url 'book_detail' item_data.book.id %}" class="text-decoration-none text-dark"></a>
+                                    <div class="flex-grow-1">
+                                        <a href="{% url 'book_detail' item_data.book.id %}" class="text-decoration-none text-dark">
+                                        <h5 class="card-title mb-1">{{ item_data.book.title }}</h5>
+                                        <p class="card-text text-muted small mb-1">
+                                            {% for writer in item_data.book.id_writer.all %}
+                                                {{ writer.nickname }}{% if not forloop.last %}, {% endif %}
+                                            {% endfor %}
+                                        </p>
+                                        <p class="card-text fw-bold mb-1">
+                                            Cкидка: <span class="discount-badge bg-danger text-white px-1">{{  item_data.book.sale }}% </span> 
+                                        </p>
+                                        <p class="card-text fw-bold mb-0">
+                                            {{ item_data.discounted_price }} × 
+                                            <span class="mx-2">{{ item_data.item.count_cart }}</span> = 
+                                            {{ item_data.total_item_price }} ₽
+                                        </p>
+                                        </a>
+                                    </div>
+                                    
+                                                                <!-- Кнопки +/- -->
                                 <div class="d-flex align-items-center">
                                     <a href="{% url 'cart_change_quantity' item_data.item.id 'decrease' %}" class="btn btn-outline-secondary btn-sm">−</a>
                                     <span class="mx-2">{{ item_data.item.count_cart }}</span>

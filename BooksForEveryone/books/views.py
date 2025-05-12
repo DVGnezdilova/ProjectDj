@@ -528,12 +528,13 @@ def favourite(request):
         'cart_count': cart_count
     })
 
+
 def remove_from_favourite(request, item_id):
     if request.user.is_authenticated:
         fav_item = get_object_or_404(Favourite, id=item_id, id_user=request.user)
         fav_item.delete()
 
-    return HttpResponseRedirect(reverse('favourite'))
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
 def add_to_favourite(request, book_id):
     book = get_object_or_404(Book, id=book_id)
@@ -744,3 +745,80 @@ def delete_review(request, review_id):
 def custom_logout(request):
     logout(request)
     return redirect('index')  # или 'index'
+
+
+def book_detail(request, book_id):
+    # Получаем книгу с prefetch_related для оптимизации
+    book = get_object_or_404(Book.objects.prefetch_related(
+        'id_writer', 
+        'review__id_user__account'
+    ), id=book_id)
+
+    # Рассчитываем цену со скидкой внутри view
+    if book.sale and book.sale.isdigit():
+        discount_percentage = int(book.sale)
+        book.discounted_price = round(book.discount * (1 - discount_percentage / 100))
+    else:
+        book.discounted_price = book.discount
+
+    # Получаем отзывы
+    reviews = book.review.filter(status_rev='Опубликован')
+
+    # Получаем статьи по книге
+    articles = Article.objects.filter(id_book=book)
+
+    # Проверяем, есть ли книга в корзине/избранном
+    in_cart = False
+    in_favourite = False
+
+    if request.user.is_authenticated:
+        in_cart = ShoppingCart.objects.filter(id_user=request.user, id_book=book).exists()
+        in_favourite = Favourite.objects.filter(id_user=request.user, id_book=book).exists()
+
+    genres = Book.objects.values_list('genre', flat=True).distinct()
+    cart_count = 0
+    if request.user.is_authenticated:
+        cart_count = ShoppingCart.objects.filter(id_user=request.user).count()
+    # Передаём всё в шаблон
+    return render(request, 'book_detail.html', {
+        'book': book,
+        'reviews': reviews,
+        'articles': articles,
+        'in_cart': in_cart,
+        'in_favourite': in_favourite,         
+        'genres': genres,
+        'cart_count': cart_count
+    })
+
+def book_detail2(request, book_id):
+    # Получаем книгу с prefetch_related для оптимизации
+    book = get_object_or_404(Book.objects.prefetch_related(
+        'id_writer', 
+        'review__id_user__account'
+    ), id=book_id)
+
+    # Рассчитываем цену со скидкой внутри view
+    if book.sale and book.sale.isdigit():
+        discount_percentage = int(book.sale)
+        book.discounted_price = round(book.discount * (1 - discount_percentage / 100))
+    else:
+        book.discounted_price = book.discount
+
+    # Получаем отзывы
+    reviews = book.review.filter(status_rev='Опубликован')
+
+    # Получаем статьи по книге
+    articles = Article.objects.filter(id_book=book)
+
+    genres = Book.objects.values_list('genre', flat=True).distinct()
+    cart_count = 0
+    if request.user.is_authenticated:
+        cart_count = ShoppingCart.objects.filter(id_user=request.user).count()
+    # Передаём всё в шаблон
+    return render(request, 'book_detail2.html', {
+        'book': book,
+        'reviews': reviews,
+        'articles': articles,      
+        'genres': genres,
+        'cart_count': cart_count
+    })

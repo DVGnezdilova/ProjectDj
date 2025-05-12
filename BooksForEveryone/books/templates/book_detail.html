@@ -1,0 +1,377 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ book.title }}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'index.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css ">
+</head>
+<body>
+
+<!-- Хедер -->
+<header class="bg-light p-2">
+        <div class="container">
+          <!-- Верхняя строка с мелкими ссылками -->
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="small text-muted d-flex align-items-center">
+                <a href="#" id="supportButton" class="text-decoration-none text-muted me-2 fs-6">Обратная связь</a>
+                <!-- Модальное окно -->
+                <div id="modal" class="modal">
+                    <div class="modal-content">
+                        <span class="close">&times;</span>
+                        <p class="mx-3">
+                            Данный раздел находится в разработке, приносим свои извинения. Скоро можно будет отправлять сообщения напрямую в техническую поддержку, а пока вы можете позвонить на бесплатный номер <strong>+7 990 088 22 00</strong> или же написать нам на почту <a href="mailto:books4everyone@mail.ru">books4everyone@mail.ru</a>.
+                        </p>
+                    </div>
+                </div>
+                <span class="text-muted mx-2">|</span>
+                <a href="#" class="text-decoration-none text-muted fs-6">Наши магазины</a>
+            </div>
+            <div class="d-flex gap-3">
+                <a href="{% url 'favourite' %}"  class="navbt btn btn-light px-2"><i class="bi bi-heart-fill"></i></a>
+                <a href="{% url 'shopcart' %}" class="navbt btn btn-light px-2 position-relative">
+                    <i class="bi bi-cart"></i>
+                    {% if cart_count > 0 %}
+                        <span class="position-absolute top-0 mt-1 translate-middle badge rounded-pill bg-danger" style="font-size: 0.75rem;">
+                            {{ cart_count }}
+                        </span>
+                    {% endif %}
+                </a>
+                <a href="{% url 'lk' %}" class="bi bi-person-fill navbt btn btn-light px-2" name="vhod"></a>  
+            </div> 
+        </div>
+      
+          <!-- Название сайта -->
+          <div class="text-center mb-3">
+            <h1 class="m-0 fs-2 fw-bold"><a href="{% url 'avtoriz' %}" name="index" class="text-decoration-none text-dark">Books For Everyone</a></h1>
+          </div>
+      
+          <!-- Основная навигация -->
+          <nav class="d-flex gap-5 fs-5 position-relative">
+            <!-- Каталог с выпадающим меню -->
+            <div class="dropdown">
+                <a href="#" class="text-decoration-none text-dark dropdown-toggle fs-5" id="catalogDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Каталог
+                </a>
+                <!-- Выпадающее меню -->
+                <ul class="dropdown-menu genre-dropdown" aria-labelledby="catalogDropdown">
+                    {% for genre in genres %}
+                        <li><a class="dropdown-item genre-item" href="{% url 'catalog2' genre %}" name="catalog" >{{ genre }}</a></li>
+                    {% empty %}
+                        <li><a class="dropdown-item disabled" href="#">Нет доступных жанров</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <a href="{% url 'journal2' %}" class="text-decoration-none text-dark">Журнал</a>
+            <a href="{% url 'publishers2' %}" class="text-decoration-none text-dark fs-5">Издательства</a>
+        </nav>
+        </div>
+</header>
+<!-- Основная часть -->
+<main class="container mt-4 mb-5">
+    <div class="row g-4 align-items-start">
+        <!-- Левая колонка: фото -->
+        <div class="col-md-5 d-flex flex-column">
+            <!-- Фото книги (фиксированный размер) -->
+            <img src="{{ book.photo }}" alt="{{ book.title }}" class="img-fluid rounded mb-3" style="width: 100%; height: 750px; object-fit: cover;">
+        </div>
+
+        <!-- Правая колонка: информация о книге -->
+        <div class="col-md-7 d-flex flex-column">
+
+            <!-- Название по центру -->
+            <h2 class="text-center my-3">{{ book.title }}</h2>
+
+            <!-- Автор под названием -->
+            <p class="text-center small text-muted mb-3">
+                {% for writer in book.id_writer.all %}
+                    {{ writer.nickname }}
+                    {% if not forloop.last %}, {% endif %}
+                {% endfor %}
+            </p>
+            
+
+            <div class="d-flex justify-content-center text-warning mb-2 font">
+                {% with rating=book.get_avg_rating %}
+                    {% for i in "12345" %}
+                        {% with current_rating=i|floatformat:"0"|add:"0" %}
+                            {% if rating >= current_rating %}
+                                <i class="bi bi-star-fill"></i>
+                                {% else %}
+                                                                    
+                            {% endif %}
+                        {% endwith %}
+                    {% endfor %}
+                {% endwith %}
+            </div>
+
+
+            <!-- Цена, скидка и кнопки сразу после названия -->
+            <!-- Цена и кнопки -->
+            <div class="price-and-buttons bg-light p-4 rounded mb-4 shadow-sm mx-3">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <!-- Левая часть: цена -->
+                    <div class="price-block text-center">
+                        <div class="d-flex justify-content-center align-items-center gap-2">
+                            <!-- Старая цена -->
+                            <span class="text-muted d-block text-decoration-line-through ">{{ book.discount }} ₽</span>
+
+                            <!-- Новая цена -->
+                            <span class="fw-bold fs-2 text-success">{{ book.discounted_price|default:book.discount }} ₽</span>
+
+                            <!-- Скидка -->
+                            {% if book.sale %}
+                                <span class="badge bg-danger fs-6 ms-2">−{{ book.sale }}%</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Правая часть: кнопки -->
+                    <div class="button-block d-flex gap-3">
+                        {% if in_cart %}
+                            <a href="{% url 'remove_from_cart_by_book' book.id %}" class="btn btn-primary btn-lg w-100 me-2">В корзине</a>
+                        {% else %}
+                            <a href="{% url 'add_to_cart' book.id %}" class="btn btn-outline-primary btn-lg w-70 me-2">В корзину</a>
+                        {% endif %}
+                        
+                        {% if in_favourite %}
+                            <a href="{% url 'add_to_favourite' book.id %}" class="btn btn-danger ms-2" style="display: flex; align-items: center; justify-content: center; height: 50px; /* Высота кнопки */ width: 50px; /* Ширина кнопки */ ">
+                                <i class="bi bi-heart-fill"></i>
+                            </a>
+                        {% else %}
+                            <a href="{% url 'add_to_favourite' book.id %}" class="btn btn-outline-danger ms-2" style="display: flex; align-items: center; justify-content: center; height: 50px; /* Высота кнопки */ width: 50px; /* Ширина кнопки */ ">
+                                <i class="bi bi-heart"></i>
+                            </a>
+                        {% endif %}
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Характеристики книги -->
+            <ul class="list-group list-group-flush mb-4">
+                <li class="list-group-item d-flex justify-content-between">
+                    <strong>ISBN:</strong> <span>{{ book.isbn }}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <strong>Жанр:</strong> <span>{{ book.genre }}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <strong>Количество страниц:</strong> <span>{{ book.num_page|default:"—" }}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <strong>Год издания:</strong> <span>{{ book.year|date:"Y" }}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <strong>Издательство:</strong> <span>{{ book.id_publish.name_publish }}</span>
+                </li>
+            </ul>
+
+            <!-- Описание книги -->
+        </div>
+    </div>
+
+    <div class="mt-4">
+            <h4 class="d-flex justify-content-center">Описание</h4>
+            <p>{{ book.description }}</p>
+    </div>
+    <!-- Отзывы о книге -->
+    <section class="mt-5">
+        <h4>Отзывы о книге</h4>
+
+        <!-- Вывод первых двух отзывов -->
+        {% if reviews %}
+            <div class="mb-3">
+                {% for review in reviews|slice:":2" %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title mb-1">
+                                {% if review.id_user.account.name or review.id_user.account.surname %}
+                                    {{ review.id_user.account.name|default:"" }}
+                                {% else %}
+                                    Неизвестный
+                                {% endif %}
+                            </h5>
+                            <div class="mb-2 text-warning d-flex">
+                                {% with rating=review.rating %}
+                                    {% for i in "12345" %}
+                                        {% if i <= rating %}
+                                            <i class="bi bi-star-fill"></i>
+                                        {% else %}
+                                            <i class="bi bi-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endwith %}
+                            </div>
+                            <p class="card-text">{{ review.text_review}}</p>
+                            <small class="text-muted">{{ review.created_at|date:"d.m.Y H:i" }}</small>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p>Нет отзывов.</p>
+                {% endfor %}
+            </div>
+
+            <!-- Кнопка "Еще отзывы", если их больше 2 -->
+            {% if reviews|length > 2 %}
+                <button id="loadMoreReviews" class="btn btn-link d-block mx-auto">Еще отзывы</button>
+                <div id="all-reviews" class="d-none">
+                    {% for review in reviews|slice:"2:" %}
+                        <div class="card mb-3">
+                            <div class="card-body">
+                            <h5 class="card-title mb-1">
+                                {% if review.id_user.account.name or review.id_user.account.surname %}
+                                    {{ review.id_user.account.name|default:"" }}
+                                {% else %}
+                                    Неизвестный
+                                {% endif %}
+                            </h5>
+                                <div class="mb-2 text-warning d-flex">
+                                    {% with rating=review.rating %}
+                                        {% for i in "12345" %}
+                                            {% if i <= rating %}
+                                                <i class="bi bi-star-fill"></i>
+                                            {% else %}
+                                                <i class="bi bi-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endwith %}
+                                </div>
+                                <p class="card-text">{{ review.text_review }}</p>
+                                <small class="text-muted">{{ review.created_at|date:"d.m.Y H:i" }}</small>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% else %}
+            <p>Нет отзывов об этой книге.</p>
+        {% endif %}
+    </section>
+
+    <!-- Статьи по книге -->
+    <section class="mt-5">
+        <h4>Статьи по этой книге</h4>
+
+        {% if articles %}
+            <!-- Вывод первых двух статей -->
+            {% for article in articles|slice:":2" %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ article.title_article }}</h5>
+                        <p class="card-text">{{ article.text_article|truncatewords:20 }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+
+            <!-- Кнопка "Еще статьи", если их больше 2 -->
+            {% if articles|length > 2 %}
+                <button id="loadMoreArticles" class="btn btn-link d-block mx-auto">Еще статьи</button>
+                <div id="all-articles" class="d-none">
+                    {% for article in articles|slice:"2:" %}
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ article.title_article }}</h5>
+                                <p class="card-text">{{ article.text_article|truncatewords:20 }}</p>
+                                <a href="{% url 'article_detail' article.id %}" class="btn btn-sm btn-link stretched-link">Читать полностью</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+        {% else %}
+            <p>Нет статей по этой книге.</p>
+        {% endif %}
+    </section>
+</main>
+
+<!-- Подвал -->
+<footer class="bg-light p-5 mt-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <p class="mb-3">Где ещё нас можно найти:</p>
+                <div class="d-flex gap-3">
+                    <button class="btn btn-light"><i class="bi bi-facebook"></i></button>
+                    <button class="btn btn-light"><i class="bi bi-vk"></i></button>
+                    <button class="btn btn-light"><i class="bi bi-youtube"></i></button>
+                </div>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <p class="mb-3">Хотите получать рассылку? Укажите вашу почту!</p>
+                <form>
+                    <div class="input-group">
+                        <input type="email" class="form-control" placeholder="ivanov.ivan@mail.ru">
+                        <button class="btn btn-secondary" type="button"><i class="bi bi-arrow-right"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- JS для показа "еще" -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const loadMoreBtn = document.getElementById('loadMoreReviews');
+    const allReviews = document.getElementById('all-reviews');
+
+    if (loadMoreBtn && allReviews) {
+        loadMoreBtn.addEventListener('click', function () {
+            if (allReviews.classList.contains('d-none')) {
+                allReviews.classList.remove('d-none');
+                this.textContent = 'Скрыть отзывы';
+            } else {
+                allReviews.classList.add('d-none');
+                this.textContent = 'Еще отзывы';
+            }
+        });
+    }
+
+    const loadMoreArticlesBtn = document.getElementById('loadMoreArticles');
+    const allArticles = document.getElementById('all-articles');
+
+    if (loadMoreArticlesBtn && allArticles) {
+        loadMoreArticlesBtn.addEventListener('click', function () {
+            if (allArticles.classList.contains('d-none')) {
+                allArticles.classList.remove('d-none');
+                this.textContent = 'Скрыть статьи';
+            } else {
+                allArticles.classList.add('d-none');
+                this.textContent = 'Еще статьи';
+            }
+        });
+    }
+});
+// Получаем элементы модального окна
+        const modal = document.getElementById('modal');
+        const supportButton = document.getElementById('supportButton');
+        const closeButton = document.querySelector('.close');
+        
+        // Открываем модальное окно при нажатии на кнопку
+        supportButton.addEventListener('click', () => {
+            modal.style.display = 'block';
+        });
+        
+        // Закрываем модальное окно при нажатии на крестик
+        closeButton.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+        
+        // Закрываем модальное окно при клике вне его области
+        window.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+</script>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap @5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

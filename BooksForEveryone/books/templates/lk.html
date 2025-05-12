@@ -101,6 +101,7 @@
                                     <h6>Книги в заказе:</h6>
                                     <ul class="list-group list-group-flush mt-3">
                                         {% for item in order.items_list %}
+                                            <a href="{% url 'book_detail' item.id_book.id %}" class="text-decoration-none text-dark">
                                             <li class="list-group-item d-flex align-items-center justify-content-between py-2">
                                                 <div class="d-flex align-items-center">
                                                     <img src="{{ item.id_book.photo }}" alt="{{ item.id_book.title }}" style="width: 80px; height: auto;" class="me-3">
@@ -134,6 +135,7 @@
                                                     {% endif %}
                                                 </div>
                                             </li>
+                                            </a>
                                         {% empty %}
                                             <p class="text-muted">Нет книг в этом заказе</p>
                                         {% endfor %}

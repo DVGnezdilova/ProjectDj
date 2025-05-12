@@ -191,6 +191,12 @@ class Book(models.Model):
         ).aggregate(avg_rating=Avg('rating_as_float'))
         return round(avg['avg_rating'], 1) if avg['avg_rating'] else 0
     
+    def get_published_reviews(self):
+        return self.review.filter(status_rev='Опубликован')
+    
+    def get_articles(self):
+        return Article.objects.filter(id_book=self)
+    
     def __str__(self):
         return self.title
 
