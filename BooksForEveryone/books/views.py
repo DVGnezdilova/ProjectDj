@@ -2,7 +2,8 @@ from django.db.models import Avg
 
 from .forms import AccountForm
 from .forms import ReviewForm
-from .models import Book, Article, PublishingHouse, ShoppingCart, Favourite, Shop, Order, Review, Account
+from .forms import ModeratorReviewForm
+from .models import Book, Article, PublishingHouse, ShoppingCart, Favourite, Shop, Order, Review, Account, OrderItem
 from django.contrib.auth.models import User
 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -10,9 +11,11 @@ from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from django.db.models import Q
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse
 from django.contrib.auth import logout
+
+from django.db import models
 
 
 def index(request):
@@ -48,6 +51,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from .models import COUNT_CHOICES
 
 def vhod(request):
     if request.method == 'POST':
@@ -106,7 +110,7 @@ def moderator_dashboard(request):
     
     if not request.user.is_staff:
         messages.error(request, "Доступ запрещён")
-        return redirect('avtoriz')
+        return redirect('vhod')
 
     new_books = Book.objects.filter(year__year=2025).prefetch_related('id_writer')[:4]
 
@@ -123,8 +127,6 @@ def moderator_dashboard(request):
     calculate_discounted_price(new_books)
 
     genres = Book.objects.values_list('genre', flat=True).distinct()
-    if request.user.is_authenticated:
-        cart_count = ShoppingCart.objects.filter(id_user=request.user).count()
 
     return render(request, 'moderator_dashboard.html', {
         'new_books': new_books,
@@ -134,51 +136,175 @@ def moderator_dashboard(request):
 def moderator_panel(request):
     if not request.user.is_staff:
         messages.error(request, "Доступ запрещён")
-        return redirect('avtoriz')
-
+        return redirect('vhod')
 
     query = request.GET.get('q')
-    reviews_list = Review.objects.filter(status_rev='Обрабатывается')
+    status_filter = request.GET.get('status')
+
+    reviews_list = Review.objects.all().order_by('-created_at')
+
+    if status_filter:
+        reviews_list = reviews_list.filter(status_rev=status_filter)
 
     if query:
         reviews_list = reviews_list.filter(
             Q(id_book__title__icontains=query) |
-            Q(id_book__id_writer__nickname__icontains=query) |
             Q(id_user__username__icontains=query) |
             Q(id_user__account__name__icontains=query) |
             Q(id_user__account__surname__icontains=query)
         ).distinct()
 
-    paginator = Paginator(reviews_list, 5)  # 6 отзывов на странице
+    # Получаем всех пользователей и книги для формы
+    users = User.objects.all()
+    books = Book.objects.all()
+
+    paginator = Paginator(reviews_list, 5)
     page_number = request.GET.get('page')
     reviews = paginator.get_page(page_number)
+    genres = Book.objects.values_list('genre', flat=True).distinct()
 
     return render(request, 'panel.html', {
         'reviews': reviews,
-        'page_obj': reviews,
-        'paginator': paginator
+        'genres': genres,
+        'users': users,
+        'books': books,
+        'query': query,
+        'status_filter': status_filter,
+        'COUNT_CHOICES': COUNT_CHOICES,
     })
+
+def delete_review_mod(request, review_id):
+    review = get_object_or_404(Review, id=review_id)
+
+    if not request.user.is_staff:
+        messages.error(request, "Только модератор может удалять отзывы")
+        return redirect('vhod')
+
+    review.delete()
+    messages.success(request, "Отзыв удален")
+    return redirect('moderator_panel')
+
+def get_books_for_moderator(request):
+    user_id = request.GET.get('user_id')
+    if not user_id:
+        return JsonResponse({'books': []})
+
+    # Книги, купленные этим пользователем со статусом "Выполнен" И без отзыва
+    books = Book.objects.filter(
+        orderitem__id_order__id_user=user_id,
+        orderitem__id_order__status_ord='Выполнен'
+    ).exclude(review__id_user=user_id).distinct()
+
+    data = [{'id': b.id, 'title': b.title} for b in books]
+    return JsonResponse({'books': data})
+
+
+def get_users_for_moderator(request):
+    book_id = request.GET.get('book_id')
+    if not book_id:
+        return JsonResponse({'users': []})
+
+    # Пользователи, купившие эту книгу со статусом "Выполнен" и без отзыва
+    users = User.objects.filter(
+        order__items__id_book=book_id,
+        order__status_ord='Выполнен'
+    ).exclude(review__id_book=book_id).distinct()
+
+    data = [{
+        'id': u.id,
+        'username': u.username,
+        'name': u.account.name or '',
+        'surname': u.account.surname or ''
+    } for u in users]
+
+    return JsonResponse({'users': data})
+
+def create_review_mod(request):
+    if not request.user.is_staff:
+        return redirect('vhod')
+
+    if request.method == 'POST':
+        user_id = request.POST.get('user')
+        book_id = request.POST.get('book')
+        text_review = request.POST.get('text_review')
+        rating = request.POST.get('rating')
+
+        try:
+            user = User.objects.get(id=user_id)
+            book = Book.objects.get(id=book_id)
+        except (User.DoesNotExist, Book.DoesNotExist):
+            messages.error(request, "Неверный пользователь или книга")
+            return redirect('moderator_panel')
+
+        has_order = OrderItem.objects.filter(
+            no_ord__id_user=user,   # ← здесь мы используем no_ord, а не id_order
+            no_ord__status_ord='Выполнен',  # статус заказа
+            id_book=book
+        ).exists()
+
+        already_reviewed = Review.objects.filter(
+            id_user=user,
+            id_book=book
+        ).exists()
+
+        if not has_order:
+            messages.error(request, "Пользователь не покупал эту книгу")
+            return redirect('moderator_panel')
+
+        if already_reviewed:
+            messages.warning(request, "Отзыв уже существует")
+            return redirect('moderator_panel')
+
+        # Создаём новый отзыв
+        Review.objects.create(
+            id_user=user,
+            id_book=book,
+            text_review=text_review,
+            rating=rating,
+            status_rev='Опубликован'
+        )
+
+        messages.success(request, "Отзыв добавлен успешно")
+
+    return redirect('moderator_panel')
+
 
 def publish_review(request, review_id):
     if not request.user.is_staff:
-        return redirect('home')  # или страница доступа запрещена
+        return redirect('vhod')  # или страница доступа запрещена
 
     review = get_object_or_404(Review, id=review_id)
     review.status_rev = 'Опубликован'
     review.save()
 
-    return redirect('moderator_dashboard')
+    return redirect('moderator_panel')
 
 
 def reject_review(request, review_id):
     if not request.user.is_staff:
-        return redirect('home')
+        return redirect('vhod')
 
     review = get_object_or_404(Review, id=review_id)
     review.status_rev = 'Отказ в публикации'
     review.save()
 
-    return redirect('moderator_dashboard')
+    return redirect('moderator_panel')
+
+def revert_review(request, review_id):
+    if not request.user.is_staff:
+        return redirect('vhod')
+
+    review = get_object_or_404(Review, id=review_id)
+    
+    # Проверяем текущий статус отзыва
+    if review.status_rev in ['Опубликован', 'Отказ в публикации']:
+        review.status_rev = 'Обрабатывается'
+        review.save()
+        messages.success(request, "Отзыв отправлен обратно на модерацию")
+    else:
+        messages.warning(request, "Невозможно вернуть в обработку")
+
+    return redirect('moderator_panel')
 
 # def vhod(request):                                        #функция по работе страницы авторизации
     # if request.method == 'POST':
@@ -577,6 +703,58 @@ def remove_from_cart_by_book_id(request, book_id):
         ShoppingCart.objects.filter(id_user=request.user, id_book__id=book_id).delete()
 
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+
+from django.db import transaction
+def checkout(request):
+    # Получаем все товары в корзине пользователя
+    cart_items = ShoppingCart.objects.filter(id_user=request.user).select_related('id_book')
+
+    if not cart_items.exists():
+        messages.error(request, "В корзине нет товаров для оформления заказа")
+        return redirect('shopcart')
+
+    # Начинаем транзакцию
+    with transaction.atomic():
+        # Создаём заказ
+        order = Order.objects.create(
+            id_user=request.user,
+            status_ord='Обрабатывается',
+            id_shop_id=1  # ← можно выбрать магазин через форму или оставить по умолчанию
+        )
+
+        total_price = 0
+
+        # Проходим по всем элементам корзины и создаём OrderItem
+        for item in cart_items:
+            book = item.id_book
+            quantity = int(item.count_cart)
+
+            # Расчёт цены книги со скидкой
+            if book.sale:
+                discount_percentage = int(book.sale)
+                discounted_price = round(book.discount * (1 - discount_percentage / 100))
+            else:
+                discounted_price = book.discount
+
+            # Сохраняем позиции заказа
+            OrderItem.objects.create(
+                no_ord=order,
+                id_book=book,
+                count_ord=item.count_cart
+            )
+
+            # Обновляем общую сумму заказа
+            total_price += discounted_price * quantity
+
+        # Обновляем цену заказа
+        order.price = total_price
+        order.save()
+
+        # Очищаем корзину после оформления
+        cart_items.delete()
+
+    messages.success(request, "Заказ успешно оформлен")
+    return redirect('shopcart')
 
 def favourite(request):
     # Получаем все записи из избранного пользователя

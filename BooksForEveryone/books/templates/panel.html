@@ -30,13 +30,17 @@
                 <a href="#" class="text-decoration-none text-muted fs-6">Наши магазины</a>
             </div>
             <div class="d-flex gap-3">
-                <a href="{% url 'vhod' %}" class="navbt btn p-0" name="vhod"><b><u>Панель модератора</u></b></a>
+                <a href="{% url 'moderator_panel' %}" class="navbt btn p-0" name="vhod"><b><u>Панель модератора</u></b></a>
             </div> 
         </div>
       
           <!-- Название сайта -->
           <div class="text-center mb-3">
-            <h1 class="m-0 fs-2 fw-bold">Books For Everyone</h1>
+                <h1 class="m-0 fs-2 fw-bold">
+                    <a href="{% url 'moderator_dashboard' %}" name="index" class="text-decoration-none text-dark">
+                        Books For Everyone
+                    </a>
+                </h1>
           </div>
       
           <!-- Основная навигация -->
@@ -67,9 +71,28 @@
     <h2 class="text-center mb-4">Модерация отзывов</h2>
 
     <!-- Поисковая строка -->
-    <form class="d-flex justify-content-center my-3" method="get">
-        <input type="text" name="q" class="form-control" placeholder="Поиск по книге, автору или пользователю" style="width: 400px;" value="{{ query|default:'' }}">
-    </form>
+    <div class="d-flex justify-content-center align-items-center mb-4">
+        <form class="my-3" method="get">
+            <input type="text" name="q" class="form-control" placeholder="Поиск по книге, автору или пользователю" style="width: 400px;" value="{{ query|default:'' }}">
+        </form>
+        <a href="#" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addReviewModal">
+            <i class="bi bi-plus-lg"></i>
+        </a>
+    </div>
+    <div class="d-flex justify-content-center mb-4 gap-2">
+        <a href="{% url 'moderator_panel' %}" class="btn btn-outline-primary btn-sm {% if not request.GET.status %}active{% endif %}">
+            Все отзывы
+        </a>
+        <a href="?status=Обрабатывается" class="btn btn-outline-info btn-sm {% if request.GET.status == 'Обрабатывается' %}active{% endif %}">
+            Обрабатывается
+        </a>
+        <a href="?status=Опубликован" class="btn btn-outline-success btn-sm {% if request.GET.status == 'Опубликован' %}active{% endif %}">
+            Опубликован
+        </a>
+        <a href="?status=Отказ в публикации" class="btn btn-outline-danger btn-sm {% if request.GET.status == 'Отказ в публикации' %}active{% endif %}">
+            Отказ в публикации
+        </a>
+    </div>
 
     <!-- Список отзывов -->
     {% if reviews %}
@@ -77,7 +100,8 @@
             {% for review in reviews %}
                     <div class="card shadow-sm h-100">
                         <div class="card-body">
-                            <h5 class="card-title">{{ review.id_book.title }}</h5>
+                            <h5 class="card-title d-flex justify-content-between align-items-center  my-3">{{ review.id_book.title }} <a href="{% url 'delete_review_mod' review.id %}" class="btn btn-outline-danger ms-auto btn-sm" onclick="return confirm('Вы уверены?')">Удалить</a>
+                           </h5>
                             <p class="card-text text-muted small">
                                 Пользователь: {{ review.id_user.username }}<br>
                                 {% if review.id_user.account.name or review.id_user.account.surname %}
@@ -96,14 +120,23 @@
                             </p>
                             <p class="card-text">{{ review.text_review}}</p>
                             <div class="d-flex justify-content-between mt-3">
-                                <small class="text-muted">{{ review.created_at|date:"d.m.Y H:i" }}</small>
+                                <small class="text-muted">{{ review.created_at|date:"d.m.Y H:i" }}</small> 
                                 {% if review.status_rev == 'Обрабатывается' %}
                                     <div>
                                         <a href="{% url 'publish_review' review.id %}" class="btn btn-success btn-sm me-2">Опубликовать</a>
                                         <a href="{% url 'reject_review' review.id %}" class="btn btn-danger btn-sm">Отклонить</a>
+                                        <span class="badge bg-info  ms-2">{{ review.status_rev }}</span>
                                     </div>
-                                {% else %}
-                                    <span class="badge bg-secondary">{{ review.status_rev }}</span>
+                                {% elif review.status_rev == 'Опубликован' %}
+                                    <div>
+                                        <a href="{% url 'revert_review' review.id %}" class="btn btn-secondary btn-sm me-2">Вернуть в обработку</a>
+                                        <span class="badge bg-success">{{ review.status_rev }}</span>
+                                    </div>
+                                {% elif review.status_rev == 'Отказ в публикации' %}
+                                    <div>
+                                        <a href="{% url 'revert_review' review.id %}" class="btn btn-secondary btn-sm me-2">Вернуть в обработку</a>
+                                        <span class="badge bg-danger">{{ review.status_rev }}</span>
+                                    </div>
                                 {% endif %}
                             </div>
                         </div>
@@ -111,32 +144,34 @@
                 </div>
             {% endfor %}
             <!-- Пагинация -->
-            <nav aria-label="Страницы" class="mt-4">
-                <ul class="pagination justify-content-center">
+            <nav aria-label="Page navigation" class="d-flex justify-content-center mt-4">
+                <ul class="pagination">
                     {% if reviews.has_previous %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ reviews.previous_page_number }}">&laquo;</a>
+                            <a class="page-link" href="?page={{ reviews.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                                &laquo;
+                            </a>
                         </li>
                     {% else %}
-                        <li class="page-item disabled">
-                            <span class="page-link">&laquo;</span>
-                        </li>
+                        <li class="page-item disabled"><span class="page-link">←</span></li>
                     {% endif %}
 
-                    {% for i in reviews.paginator.page_range %}
-                        <li class="page-item {% if reviews.number == i %}active{% endif %}">
-                            <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                    {% for p in paginator.page_range %}
+                        <li class="page-item {% if reviews.number == p %}active{% endif %}">
+                            <a class="page-link" href="?page={{ p }}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                                {{ p }}
+                            </a>
                         </li>
                     {% endfor %}
 
                     {% if reviews.has_next %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ reviews.next_page_number }}">&raquo;</a>
+                            <a class="page-link" href="?page={{ reviews.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                                &raquo;
+                            </a>
                         </li>
                     {% else %}
-                        <li class="page-item disabled">
-                            <span class="page-link">&raquo;</span>
-                        </li>
+                        <li class="page-item disabled"><span class="page-link">→</span></li>
                     {% endif %}
                 </ul>
             </nav>
@@ -145,6 +180,75 @@
     {% endif %}
     
     </main>
+    <div class="modal fade" id="addReviewModal" tabindex="-1" aria-labelledby="addReviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Добавить отзыв от имени пользователя</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" action="{% url 'create_review_mod' %}" id="reviewForm">
+                        {% csrf_token %}
+                        <!-- Выбор книги -->
+                        
+                        <div class="mb-3">
+                            <label for="bookSelect" class="form-label">Книга</label>
+                            <select name="book" id="bookSelect" class="form-select" required>
+                                <option value="">Выберите книгу</option>
+                                {% for b in books %}
+                                    <option value="{{ b.id }}">{{ b.title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <!-- Выбор пользователя -->
+                        <div class="mb-3">
+                            <label for="userSelect" class="form-label">Пользователь</label>
+                            <select name="user" id="userSelect" class="form-select" required>
+                                <option value="">Выберите пользователя</option>
+                                {% for u in users %}
+                                    <option value="{{ u.id }}">{{ u.username }} ({{ u.account.name }} {{ u.account.surname }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+
+                        <!-- Текст отзыва -->
+                        <div class="mb-3">
+                            <label for="text_review" class="form-label">Текст отзыва</label>
+                            <textarea name="text_review" id="text_review" rows="4" class="form-control" required></textarea>
+                        </div>
+
+                        <!-- Рейтинг -->
+                        <div class="mb-3">
+                            <label class="form-label">Оценка</label>
+                            <div id="starRatingModerator" class="d-flex gap-2 fs-3 text-warning">
+                                <i class="bi bi-star" data-value="1"></i>
+                                <i class="bi bi-star" data-value="2"></i>
+                                <i class="bi bi-star" data-value="3"></i>
+                                <i class="bi bi-star" data-value="4"></i>
+                                <i class="bi bi-star" data-value="5"></i>
+                            </div>
+                            <input type="hidden" name="rating" id="ratingInput" required>
+                        </div>
+
+                        <!-- Подтверждение -->
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="confirmModeratorReview" required>
+                            <label class="form-check-label" for="confirmModeratorReview">
+                                Я подтверждаю, что пользователь действительно купил эту книгу
+                            </label>
+                        </div>
+
+                        <!-- Отправка -->
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-success">Добавить отзыв</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Footer -->
     <footer class="bg-light p-5">
         <div class="container">
@@ -173,6 +277,100 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
     <script>// Получаем элементы модального окна
+        document.addEventListener("DOMContentLoaded", function () {
+            const userSelect = document.getElementById('userSelect');
+            const bookSelect = document.getElementById('bookSelect');
+            const ratingInput = document.getElementById('ratingInput');
+            const stars = document.querySelectorAll('#starRatingModerator i');
+            let selectedRating = '';
+
+            // Звёзды рейтинга
+            stars.forEach(star => {
+                star.addEventListener('click', function () {
+                    selectedRating = this.getAttribute('data-value');
+                    updateStars();
+                    ratingInput.value = selectedRating;
+                });
+
+                star.addEventListener('mouseover', function () {
+                    highlightStars(this.getAttribute('data-value'));
+                });
+
+                star.addEventListener('mouseout', function () {
+                    updateStars();
+                });
+            });
+
+            function highlightStars(hoverValue) {
+                stars.forEach(star => {
+                    if (star.getAttribute('data-value') <= hoverValue) {
+                        star.classList.add('bi-star-fill');
+                        star.classList.remove('bi-star');
+                    } else {
+                        star.classList.add('bi-star');
+                        star.classList.remove('bi-star-fill');
+                    }
+                });
+            }
+
+            function updateStars() {
+                stars.forEach(star => {
+                    if (star.getAttribute('data-value') <= selectedRating) {
+                        star.classList.add('bi-star-fill');
+                        star.classList.remove('bi-star');
+                    } else {
+                        star.classList.add('bi-star');
+                        star.classList.remove('bi-star-fill');
+                    }
+                });
+            }
+
+            // При изменении пользователя → обновляем список книг
+            if (userSelect) {
+                userSelect.addEventListener('change', function () {
+                    const userId = this.value;
+
+                    fetch(`/moderator/get_books/?user_id=${userId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            bookSelect.innerHTML = '<option value="">Выберите книгу</option>';
+                            data.books.forEach(book => {
+                                const option = document.createElement('option');
+                                option.value = book.id;
+                                option.textContent = book.title;
+                                bookSelect.appendChild(option);
+                            });
+                        });
+                });
+            }
+
+            // При изменении книги → обновляем список пользователей
+            if (bookSelect) {
+                bookSelect.addEventListener('change', function () {
+                    const bookId = this.value;
+
+                    fetch(`/moderator/get_users/?book_id=${bookId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            userSelect.innerHTML = '<option value="">Выберите пользователя</option>';
+                            data.users.forEach(user => {
+                                const option = document.createElement('option');
+                                option.value = user.id;
+                                option.textContent = `${user.username} (${user.name} ${user.surname})`;
+                                userSelect.appendChild(option);
+                            });
+                        });
+                });
+            }
+
+            // Отправка формы
+            document.getElementById('reviewForm').addEventListener('submit', function (e) {
+                if (!ratingInput.value || !document.getElementById('confirmModeratorReview').checked) {
+                    alert("Пожалуйста, поставьте оценку и подтвердите действие");
+                    e.preventDefault();
+                }
+            });
+        });
         const modal = document.getElementById('modal');
         const supportButton = document.getElementById('supportButton');
         const closeButton = document.querySelector('.close');

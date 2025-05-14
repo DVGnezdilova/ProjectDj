@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path
-from books.views import index, vhod, regist,moderator_dashboard,moderator_panel, publish_review, reject_review, avtoriz, journal, catalog, publishers_list, journal2, catalog2, publishers_list2, shopcart,cart_change_quantity, remove_from_cart, add_to_cart,favourite,remove_from_favourite, add_to_favourite, remove_from_cart_by_book_id, lk,add_review, custom_logout, profile, update_profile, reviews, delete_review, book_detail, book_detail2
+from books.views import index, vhod, regist,moderator_dashboard,moderator_panel,delete_review_mod,create_review_mod, get_books_for_moderator, get_users_for_moderator, publish_review, reject_review,revert_review, avtoriz, journal, catalog, publishers_list, journal2, catalog2, publishers_list2, shopcart, checkout, cart_change_quantity, remove_from_cart, add_to_cart,favourite,remove_from_favourite, add_to_favourite, remove_from_cart_by_book_id, lk,add_review, custom_logout, profile, update_profile, reviews, delete_review, book_detail, book_detail2
 from django.urls import include, path
 
 urlpatterns = [
@@ -28,8 +28,13 @@ urlpatterns = [
     path('regist/', regist, name='regist'),
     path('moderator/', moderator_dashboard, name='moderator_dashboard'),
     path('moderator_panel/', moderator_panel, name='moderator_panel'),
+    path('review/delete/<int:review_id>/', delete_review_mod, name='delete_review_mod'),
+    path('moderator/get_books/', get_books_for_moderator, name='get_books_for_moderator'),
+    path('moderator/get_users/', get_users_for_moderator, name='get_users_for_moderator'),
+    path('moderator/review/add/', create_review_mod, name='create_review_mod'),
     path('review/publish/<int:review_id>/', publish_review, name='publish_review'),
     path('review/reject/<int:review_id>/', reject_review, name='reject_review'),
+    path('review/revert/<int:review_id>/', revert_review, name='revert_review'),
     path('avtoriz/', avtoriz, name='avtoriz'),
     path('journal/', journal, name='journal'),
     path('catalog/<str:genre>/', catalog, name='catalog'),
@@ -38,6 +43,7 @@ urlpatterns = [
     path('catalog2/<str:genre>/', catalog2, name='catalog2'),
     path('publishers2/', publishers_list2, name='publishers2'),
     path('shopcart/', shopcart, name='shopcart'),
+    path('checkout/', checkout, name='checkout'),
     path('cart/change-quantity/<int:item_id>/<str:action>/', cart_change_quantity, name='cart_change_quantity'),
     path('shopcart/remove/<int:item_id>/', remove_from_cart, name='remove_from_cart'),
     path('cart/add/<int:book_id>/', add_to_cart, name='add_to_cart'),

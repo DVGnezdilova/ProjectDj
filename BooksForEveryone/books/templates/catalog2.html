@@ -34,7 +34,7 @@
                         {% if user.is_staff %}
                             <!-- Только для модераторов -->
                             <div class="d-flex gap-3">
-                                <a href="{% url 'vhod' %}" class="navbt btn p-0" name="vhod"><b><u>Панель модератора</u></b></a>
+                                <a href="{% url 'moderator_panel' %}" class="navbt btn p-0" name="vhod"><b><u>Панель модератора</u></b></a>
                             </div>
                         {% else %}
                             <!-- Для обычных авторизованных пользователей -->
