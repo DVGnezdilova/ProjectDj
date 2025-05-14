@@ -1,0 +1,318 @@
+{% load static %}
+<!-- <link rel="stylesheet" href="{% static 'index.css' %}"> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookstore</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'index.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.min.css">
+</head>
+<body>
+      <header class="bg-light p-2">
+        <div class="container">
+          <!-- Верхняя строка с мелкими ссылками -->
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="small text-muted d-flex align-items-center">
+                <a href="#" id="supportButton" class="text-decoration-none text-muted me-2 fs-6">Обратная связь</a>
+                <!-- Модальное окно -->
+                <div id="modal" class="modal">
+                    <div class="modal-content">
+                        <span class="close">&times;</span>
+                        <p class="mx-3">
+                            Данный раздел находится в разработке, приносим свои извинения. Скоро можно будет отправлять сообщения напрямую в техническую поддержку, а пока вы можете позвонить на бесплатный номер <strong>+7 990 088 22 00</strong> или же написать нам на почту <a href="mailto:books4everyone@mail.ru">books4everyone@mail.ru</a>.
+                        </p>
+                    </div>
+                </div>
+                <span class="text-muted mx-2">|</span>
+                <a href="#" class="text-decoration-none text-muted fs-6">Наши магазины</a>
+            </div>
+            <div class="d-flex gap-3">
+                <a href="{% url 'moderator_panel' %}" class="navbt btn p-0" name="vhod"><b><u>Панель модератора</u></b></a>
+            </div> 
+        </div>
+      
+          <!-- Название сайта -->
+          <div class="text-center mb-3">
+            <h1 class="m-0 fs-2 fw-bold">Books For Everyone</h1>
+          </div>
+      
+          <!-- Основная навигация -->
+          <nav class="d-flex gap-5 fs-5 position-relative">
+            <!-- Каталог с выпадающим меню -->
+            <div class="dropdown">
+                <a href="#" class="text-decoration-none text-dark dropdown-toggle fs-5" id="catalogDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Каталог
+                </a>
+                <!-- Выпадающее меню -->
+                <ul class="dropdown-menu genre-dropdown" aria-labelledby="catalogDropdown">
+                    {% for genre in genres %}
+                        <li><a class="dropdown-item genre-item" href="{% url 'catalog2' genre %}" name="catalog" >{{ genre }}</a></li>
+                    {% empty %}
+                        <li><a class="dropdown-item disabled" href="#">Нет доступных жанров</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <a href="{% url 'journal2' %}" class="text-decoration-none text-dark">Журнал</a>
+            <a href="{% url 'publishers2' %}" class="text-decoration-none text-dark">Издательства</a>
+        </nav>
+        </div>
+      </header>
+    <!-- Main Content -->
+  <!-- Главное содержимое -->
+    <main class="container mt-4">
+        <!-- Две карусели в одной строке -->
+        <div class="row mb-4">
+            <!-- Левая карусель -->
+            <div class="col-md-6">
+                <h4 class="text-center text-dark py-2">Книги месяца</h4>
+              <section class="mb-5 bg-dark">
+                <!-- Заголовок над каруселью -->
+                <!-- Карусель -->
+                <div id="carouselBooks" class="carousel slide" data-bs-ride="carousel">
+                  <!-- Индикаторы (кружки) -->
+                  <div class="carousel-indicators">
+                    <button type="button" data-bs-target="#carouselBooks" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                    <button type="button" data-bs-target="#carouselBooks" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                  </div>
+                  <!-- Слайды -->
+                  <div class="carousel-inner">
+                    <div class="carousel-item active">
+                      <img src="{% static 'images/books-month2.png' %}" class="d-block w-100" style="object-fit: cover;" alt="Книги месяца">
+                    </div>
+                    <div class="carousel-item">
+                      <img src="{% static 'images/books-month.png' %}" class="d-block w-100" style="object-fit: cover;" alt="Книги месяца">
+                    </div>
+                  </div>
+                  <!-- Кнопки управления -->
+                  <button class="carousel-control-prev " type="button" data-bs-target="#carouselBooks" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon bg-secondary" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                  </button>
+                  <button class="carousel-control-next" type="button" data-bs-target="#carouselBooks" data-bs-slide="next">
+                    <span class="carousel-control-next-icon bg-secondary" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                  </button>
+                </div>
+              </section>
+            </div>
+          
+            <!-- Правая карусель -->
+            <div class="col-md-6">
+                <h4 class="text-center text-dark py-2">Акции месяца</h4>
+              <section class="mb-5 bg-dark">
+                <!-- Заголовок над каруселью -->
+                <!-- Карусель -->
+                <div id="carouselSales" class="carousel slide" data-bs-ride="carousel">
+                  <!-- Индикаторы (кружки) -->
+                  <div class="carousel-indicators ">
+                    <button type="button" data-bs-target="#carouselSales" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                    <button type="button" data-bs-target="#carouselSales" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                  </div>
+                  <!-- Слайды -->
+                  <div class="carousel-inner">
+                    <div class="carousel-item active">
+                      <img src="{% static 'images/sales-month2.png' %}" class="d-block w-100" alt="Акции месяца">
+                    </div>
+                    <div class="carousel-item">
+                      <img src="{% static 'images/sales-month.png' %}" class="d-block w-100" alt="Акции месяца">
+                    </div>
+                  </div>
+                  <!-- Кнопки управления -->
+                  <button class="carousel-control-prev" type="button" data-bs-target="#carouselSales" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon bg-secondary" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                  </button>
+                  <button class="carousel-control-next" type="button" data-bs-target="#carouselSales" data-bs-slide="next">
+                    <span class="carousel-control-next-icon bg-secondary" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                  </button>
+                </div>
+              </section>
+            </div>
+          </div>
+
+
+
+
+        
+        <section class="mb-5">
+            <h2 class="text-center mb-4">Новинки</h2>
+            <div class="catalog">
+                <div class="container">
+                    <div class="row row-equal-height">
+                        <!-- Цикл для вывода книг -->
+                        {% for book in new_books %}
+                            <div class="col-md-3 mb-4">
+                                <a href=" {% url 'book_detail' book.id %}" class="text-decoration-none text-dark">
+                                    <div class="products-inside d-flex flex-column h-100">
+                                        <!-- Изображение книги -->
+                                        <div class="products-img">
+                                            <img src="{{ book.photo }}" alt="{{ book.title }}" style="width: 100%; height: 400px; object-fit: cover; border-radius: 8px;">
+                                        </div>
+                                        <!-- Детали книги -->
+                                        <div class="products-details flex-grow-1 d-flex flex-column">
+                                            <!-- Название книги -->
+                                            <h4 class="book-title text-center">{{ book.title }}</h4>
+                                            <!-- Автор(ы) -->
+                                            <p class="author text-center small text-muted">
+                                                {% for writer in book.id_writer.all %}
+                                                    {{ writer.nickname }}
+                                                    {% if not forloop.last %}, {% endif %}
+                                                {% endfor %}
+                                            </p>
+
+                                                <div class="d-flex justify-content-center text-warning mb-2">
+                                                    {% with rating=book.get_avg_rating|default:0 %}
+                                                        {% for i in "12345" %}
+                                                            {% with current_rating=i|floatformat:"0"|add:"0" %}
+                                                                {% if rating >= current_rating %}
+                                                                    <i class="bi bi-star-fill"></i>
+                                                                {% else %}
+                                                                    <i class="bi bi-star"></i>
+                                                                {% endif %}
+                                                            {% endwith %}
+                                                        {% endfor %}
+                                                    {% endwith %}
+                                                </div>
+                                            <!-- Цены -->
+                                            <div class="price-container mt-auto d-flex justify-content-between">
+                                                <span class="old-price text-decoration-line-through small text-muted px-1">{{ book.discount }}&#8381;</span>
+                                                <span class="new-price fw-bold">{{ book.discounted_price }}&#8381;</span>
+                                                {% if book.sale %}
+                                                    <span class="discount-badge bg-danger text-white px-1">{{ book.sale }}%</span>
+                                                {% endif %}
+                                            </div>
+                                            <!-- Кнопка "Купить" -->
+                                            <a class="buy-btn my-3 d-block text-center" href="/vh" style="text-decoration: none;">
+                                                <span>Подробнее</span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        {% empty %}
+                            <!-- Если книг нет -->
+                            <div class="col-12">
+                                <p class="text-center">Ничего не найдено</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Bestsellers -->
+        <section class="mb-5">
+            <h2 class="text-center mb-4">Лучшее</h2>
+            <div class="row row-cols-1 row-cols-md-4 g-4">
+                <div class="col">
+                    <div class="card h-100">
+                        <img src="book-cover.jpg" class="card-img-top" alt="Книга">
+                        <div class="card-body">
+                            <h5 class="card-title">Название</h5>
+                            <button class="btn btn-secondary">В корзину</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Repeat the above card structure for other books -->
+            </div>
+        </section>
+
+
+        <!-- Latest Articles -->
+        <section class="mb-5">
+            <h2 class="text-center mb-4">Последние статьи</h2>
+            <div class="row row-cols-1 row-cols-md-3 g-4">
+                <div class="col">
+                    <div class="card h-100">
+                        <img src="article-image.jpg" class="card-img-top" alt="Статья">
+                        <div class="card-body">
+                            <h5 class="card-title">Название</h5>
+                            <p class="card-text">Краткое описание краткое описание...</p>
+                            <button class="btn btn-secondary">Читать</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Repeat the above card structure for other articles -->
+            </div>
+            <div class="text-start mt-3">
+                <button class="btn btn-link">Ещё статьи</button>
+            </div>
+        </section>
+
+        <!-- Gifts -->
+        <section class="mb-5">
+            <h2 class="text-center mb-4">Подарки любимым!</h2>
+            <div class="row row-cols-1 row-cols-md-3 g-4">
+                <div class="col">
+                    <div class="card h-100">
+                        <img src="gift-cover.jpg" class="card-img-top" alt="Подарок">
+                        <div class="card-body">
+                            <h5 class="card-title">Название</h5>
+                            <button class="btn btn-secondary">В корзину</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Repeat the above card structure for other gifts -->
+            </div>
+            <div class="text-end mt-3">
+                <button class="btn btn-link">Подробнее</button>
+            </div>
+        </section>
+
+    </main>
+    
+
+    <!-- Footer -->
+    <footer class="bg-light p-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-3">Где ещё нас можно найти:</p>
+                    <div class="d-flex gap-3">
+                        <button class="btn btn-light"><i class="bi bi-facebook"></i></button>
+                        <button class="btn btn-light"><i class="bi bi-vk"></i></button>
+                        <button class="btn btn-light"><i class="bi bi-youtube"></i></button>
+                    </div>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-3">Хотите получать рассылку о новинках? Укажите вашу почту!</p>
+                    <form>
+                        <div class="input-group">
+                            <input type="email" class="form-control" placeholder="ivanov.ivan@mail.ru" aria-label="Email input with button addon">
+                            <button class="btn btn-secondary" type="button"><i class="bi bi-arrow-right"></i></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>// Получаем элементы модального окна
+        const modal = document.getElementById('modal');
+        const supportButton = document.getElementById('supportButton');
+        const closeButton = document.querySelector('.close');
+        
+        // Открываем модальное окно при нажатии на кнопку
+        supportButton.addEventListener('click', () => {
+            modal.style.display = 'block';
+        });
+        
+        // Закрываем модальное окно при нажатии на крестик
+        closeButton.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+        
+        // Закрываем модальное окно при клике вне его области
+        window.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

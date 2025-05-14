@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path
-from books.views import index, vhod, regist, avtoriz, journal, catalog, publishers_list, journal2, catalog2, publishers_list2, shopcart,cart_change_quantity, remove_from_cart, add_to_cart,favourite,remove_from_favourite, add_to_favourite, remove_from_cart_by_book_id, lk,add_review, custom_logout, profile, update_profile, reviews, delete_review, book_detail, book_detail2
+from books.views import index, vhod, regist,moderator_dashboard,moderator_panel, publish_review, reject_review, avtoriz, journal, catalog, publishers_list, journal2, catalog2, publishers_list2, shopcart,cart_change_quantity, remove_from_cart, add_to_cart,favourite,remove_from_favourite, add_to_favourite, remove_from_cart_by_book_id, lk,add_review, custom_logout, profile, update_profile, reviews, delete_review, book_detail, book_detail2
 from django.urls import include, path
 
 urlpatterns = [
@@ -26,6 +26,10 @@ urlpatterns = [
     path('', index, name='index'),
     path('vhod/', vhod, name='vhod'),
     path('regist/', regist, name='regist'),
+    path('moderator/', moderator_dashboard, name='moderator_dashboard'),
+    path('moderator_panel/', moderator_panel, name='moderator_panel'),
+    path('review/publish/<int:review_id>/', publish_review, name='publish_review'),
+    path('review/reject/<int:review_id>/', reject_review, name='reject_review'),
     path('avtoriz/', avtoriz, name='avtoriz'),
     path('journal/', journal, name='journal'),
     path('catalog/<str:genre>/', catalog, name='catalog'),

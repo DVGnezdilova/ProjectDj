@@ -27,7 +27,7 @@
                     {% csrf_token %}
 
                     <label for="phone">Номер телефона:</label>
-                    <input type="text" id="phone" name="phone" placeholder="+7 (___) ___-___">
+                    <input type="text" id="phone" name="phone" placeholder="+7 ___-___-___">
 
                     <script>
                         document.getElementById('phone').addEventListener('input', function(event) {
@@ -44,17 +44,17 @@
                             // Форматируем номер телефона
                             let formattedNumber = '+7';
                             if (phoneNumber.length > 0) {
-                                formattedNumber += '(' + (phoneNumber.substring(1, 4) || '___') + ')';
+                                formattedNumber +=  (phoneNumber.substring(1, 4) || '___') ;
                                 formattedNumber += '-' + (phoneNumber.substring(4, 7) || '___');
                                 formattedNumber += '-' + (phoneNumber.substring(7, 11) || '____');
                             } else {
-                                formattedNumber = '+7(___) ___-____'; // Если ничего не введено, показываем плейсхолдер
+                                formattedNumber = '+7 ___-___-____'; // Если ничего не введено, показываем плейсхолдер
                             }
                     
                             // Проверяем, удаляет ли пользователь символы
                             if (input.value.length < formattedNumber.length && phoneNumber.length === 0) {
                                 // Если пользователь полностью удалил текст, восстанавливаем плейсхолдер
-                                input.value = '+7(___) ___-____';
+                                input.value = '+7 ___-___-____';
                                 return;
                             }
                     

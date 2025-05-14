@@ -1,0 +1,198 @@
+{% load static %}
+<!-- <link rel="stylesheet" href="{% static 'index.css' %}"> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookstore</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'index.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.min.css">
+</head>
+<body class=" d-flex flex-column min-vh-100">
+      <header class="bg-light p-2">
+        <div class="container">
+          <!-- Верхняя строка с мелкими ссылками -->
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="small text-muted d-flex align-items-center">
+                <a href="#" id="supportButton" class="text-decoration-none text-muted me-2 fs-6">Обратная связь</a>
+                <!-- Модальное окно -->
+                <div id="modal" class="modal">
+                    <div class="modal-content">
+                        <span class="close">&times;</span>
+                        <p class="mx-3">
+                            Данный раздел находится в разработке, приносим свои извинения. Скоро можно будет отправлять сообщения напрямую в техническую поддержку, а пока вы можете позвонить на бесплатный номер <strong>+7 990 088 22 00</strong> или же написать нам на почту <a href="mailto:books4everyone@mail.ru">books4everyone@mail.ru</a>.
+                        </p>
+                    </div>
+                </div>
+                <span class="text-muted mx-2">|</span>
+                <a href="#" class="text-decoration-none text-muted fs-6">Наши магазины</a>
+            </div>
+            <div class="d-flex gap-3">
+                <a href="{% url 'vhod' %}" class="navbt btn p-0" name="vhod"><b><u>Панель модератора</u></b></a>
+            </div> 
+        </div>
+      
+          <!-- Название сайта -->
+          <div class="text-center mb-3">
+            <h1 class="m-0 fs-2 fw-bold">Books For Everyone</h1>
+          </div>
+      
+          <!-- Основная навигация -->
+          <nav class="d-flex gap-5 fs-5 position-relative">
+            <!-- Каталог с выпадающим меню -->
+            <div class="dropdown">
+                <a href="#" class="text-decoration-none text-dark dropdown-toggle fs-5" id="catalogDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Каталог
+                </a>
+                <!-- Выпадающее меню -->
+                <ul class="dropdown-menu genre-dropdown" aria-labelledby="catalogDropdown">
+                    {% for genre in genres %}
+                        <li><a class="dropdown-item genre-item" href="{% url 'catalog2' genre %}" name="catalog" >{{ genre }}</a></li>
+                    {% empty %}
+                        <li><a class="dropdown-item disabled" href="#">Нет доступных жанров</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <a href="{% url 'journal2' %}" class="text-decoration-none text-dark">Журнал</a>
+            <a href="{% url 'publishers2' %}" class="text-decoration-none text-dark">Издательства</a>
+        </nav>
+        </div>
+      </header>
+    <!-- Main Content -->
+  <!-- Главное содержимое -->
+
+    <main class="container mt-4 mb-5 flex-grow-1">
+    <h2 class="text-center mb-4">Модерация отзывов</h2>
+
+    <!-- Поисковая строка -->
+    <form class="d-flex justify-content-center my-3" method="get">
+        <input type="text" name="q" class="form-control" placeholder="Поиск по книге, автору или пользователю" style="width: 400px;" value="{{ query|default:'' }}">
+    </form>
+
+    <!-- Список отзывов -->
+    {% if reviews %}
+        <div class="row g-4">
+            {% for review in reviews %}
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ review.id_book.title }}</h5>
+                            <p class="card-text text-muted small">
+                                Пользователь: {{ review.id_user.username }}<br>
+                                {% if review.id_user.account.name or review.id_user.account.surname %}
+                                    Имя: {{ review.id_user.account.name }} {{ review.id_user.account.surname }}<br>
+                                {% endif %}
+                                Рейтинг: 
+                                {% with rating=review.rating %}
+                                    {% for i in "12345" %}
+                                        {% if i <= rating %}
+                                            <i class="bi bi-star-fill text-warning"></i>
+                                        {% else %}
+                                            <i class="bi bi-star text-warning"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endwith %}
+                            </p>
+                            <p class="card-text">{{ review.text_review}}</p>
+                            <div class="d-flex justify-content-between mt-3">
+                                <small class="text-muted">{{ review.created_at|date:"d.m.Y H:i" }}</small>
+                                {% if review.status_rev == 'Обрабатывается' %}
+                                    <div>
+                                        <a href="{% url 'publish_review' review.id %}" class="btn btn-success btn-sm me-2">Опубликовать</a>
+                                        <a href="{% url 'reject_review' review.id %}" class="btn btn-danger btn-sm">Отклонить</a>
+                                    </div>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ review.status_rev }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+            <!-- Пагинация -->
+            <nav aria-label="Страницы" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if reviews.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ reviews.previous_page_number }}">&laquo;</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">&laquo;</span>
+                        </li>
+                    {% endif %}
+
+                    {% for i in reviews.paginator.page_range %}
+                        <li class="page-item {% if reviews.number == i %}active{% endif %}">
+                            <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                        </li>
+                    {% endfor %}
+
+                    {% if reviews.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ reviews.next_page_number }}">&raquo;</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">&raquo;</span>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+    {% else %}
+        <div class="alert alert-info text-center">Нет отзывов для модерации.</div>
+    {% endif %}
+    
+    </main>
+    <!-- Footer -->
+    <footer class="bg-light p-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-3">Где ещё нас можно найти:</p>
+                    <div class="d-flex gap-3">
+                        <button class="btn btn-light"><i class="bi bi-facebook"></i></button>
+                        <button class="btn btn-light"><i class="bi bi-vk"></i></button>
+                        <button class="btn btn-light"><i class="bi bi-youtube"></i></button>
+                    </div>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-3">Хотите получать рассылку о новинках? Укажите вашу почту!</p>
+                    <form>
+                        <div class="input-group">
+                            <input type="email" class="form-control" placeholder="ivanov.ivan@mail.ru" aria-label="Email input with button addon">
+                            <button class="btn btn-secondary" type="button"><i class="bi bi-arrow-right"></i></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>// Получаем элементы модального окна
+        const modal = document.getElementById('modal');
+        const supportButton = document.getElementById('supportButton');
+        const closeButton = document.querySelector('.close');
+        
+        // Открываем модальное окно при нажатии на кнопку
+        supportButton.addEventListener('click', () => {
+            modal.style.display = 'block';
+        });
+        
+        // Закрываем модальное окно при нажатии на крестик
+        closeButton.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+        
+        // Закрываем модальное окно при клике вне его области
+        window.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

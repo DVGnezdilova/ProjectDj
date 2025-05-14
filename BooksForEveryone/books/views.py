@@ -65,7 +65,10 @@ def vhod(request):
         auth_user = authenticate(username=user.username, password=password)
         if auth_user is not None:
             login(request, auth_user)
-            return redirect('avtoriz')  # Перенаправляем на страницу авторизованного пользователя
+            if auth_user.is_staff:
+                return redirect('moderator_dashboard')  # ← панель модератора
+            else:
+                return redirect('avtoriz')  # ← главная для обычных пользователей
         else:
             messages.error(request, "Неправильный пароль.")
             return redirect('vhod')
@@ -97,6 +100,85 @@ def regist(request):
 
     return render(request, 'regist.html')
 
+def moderator_dashboard(request):
+    if not request.user.is_authenticated:
+        return redirect('vhod')
+    
+    if not request.user.is_staff:
+        messages.error(request, "Доступ запрещён")
+        return redirect('avtoriz')
+
+    new_books = Book.objects.filter(year__year=2025).prefetch_related('id_writer')[:4]
+
+    # Расчет цен со скидкой
+    def calculate_discounted_price(books):
+        for book in books:
+            if book.sale:
+                discount_percentage = int(book.sale)
+                book.discounted_price = round(book.discount - (book.discount * discount_percentage / 100))
+            else:
+                book.discounted_price = book.discount
+
+
+    calculate_discounted_price(new_books)
+
+    genres = Book.objects.values_list('genre', flat=True).distinct()
+    if request.user.is_authenticated:
+        cart_count = ShoppingCart.objects.filter(id_user=request.user).count()
+
+    return render(request, 'moderator_dashboard.html', {
+        'new_books': new_books,
+        'genres': genres,
+    })
+
+def moderator_panel(request):
+    if not request.user.is_staff:
+        messages.error(request, "Доступ запрещён")
+        return redirect('avtoriz')
+
+
+    query = request.GET.get('q')
+    reviews_list = Review.objects.filter(status_rev='Обрабатывается')
+
+    if query:
+        reviews_list = reviews_list.filter(
+            Q(id_book__title__icontains=query) |
+            Q(id_book__id_writer__nickname__icontains=query) |
+            Q(id_user__username__icontains=query) |
+            Q(id_user__account__name__icontains=query) |
+            Q(id_user__account__surname__icontains=query)
+        ).distinct()
+
+    paginator = Paginator(reviews_list, 5)  # 6 отзывов на странице
+    page_number = request.GET.get('page')
+    reviews = paginator.get_page(page_number)
+
+    return render(request, 'panel.html', {
+        'reviews': reviews,
+        'page_obj': reviews,
+        'paginator': paginator
+    })
+
+def publish_review(request, review_id):
+    if not request.user.is_staff:
+        return redirect('home')  # или страница доступа запрещена
+
+    review = get_object_or_404(Review, id=review_id)
+    review.status_rev = 'Опубликован'
+    review.save()
+
+    return redirect('moderator_dashboard')
+
+
+def reject_review(request, review_id):
+    if not request.user.is_staff:
+        return redirect('home')
+
+    review = get_object_or_404(Review, id=review_id)
+    review.status_rev = 'Отказ в публикации'
+    review.save()
+
+    return redirect('moderator_dashboard')
 
 # def vhod(request):                                        #функция по работе страницы авторизации
     # if request.method == 'POST':

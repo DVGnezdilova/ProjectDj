@@ -31,24 +31,40 @@
                 <span class="text-muted mx-2">|</span>
                 <a href="#" class="text-decoration-none text-muted fs-6">Наши магазины</a>
             </div>
-            <div class="d-flex gap-3">
-                <a href="{% url 'favourite' %}"  class="navbt btn btn-light px-2"><i class="bi bi-heart-fill"></i></a>
-                <a href="{% url 'shopcart' %}" class="navbt btn btn-light px-2 position-relative">
-                    <i class="bi bi-cart"></i>
-                    {% if cart_count > 0 %}
-                        <span class="position-absolute top-0 mt-1 translate-middle badge rounded-pill bg-danger" style="font-size: 0.75rem;">
-                            {{ cart_count }}
-                        </span>
+<div class="d-flex gap-3 align-items-center">
+                    {% if user.is_authenticated %}
+                        {% if user.is_staff %}
+                            <!-- Только для модераторов -->
+                            <div class="d-flex gap-3">
+                                <a href="{% url 'vhod' %}" class="navbt btn p-0" name="vhod"><b><u>Панель модератора</u></b></a>
+                            </div>
+                        {% else %}
+                            <!-- Для обычных авторизованных пользователей -->
+                            <div class="d-flex gap-3">
+                            <a href="{% url 'favourite' %}"  class="navbt btn btn-light px-2"><i class="bi bi-heart-fill"></i></a>
+                            <a href="{% url 'shopcart' %}" class="navbt btn btn-light px-2 position-relative">
+                                <i class="bi bi-cart"></i>
+                                {% if cart_count > 0 %}
+                                    <span class="position-absolute top-0 mt-1 translate-middle badge rounded-pill bg-danger" style="font-size: 0.75rem;">
+                                        {{ cart_count }}
+                                    </span>
+                                {% endif %}
+                            </a>
+                            <a href="{% url 'lk' %}" class="bi bi-person-fill navbt btn btn-light px-2" name="vhod"></a>  
+                            </div> 
+                        {% endif %}
                     {% endif %}
-                </a>
-                <a href="{% url 'lk' %}" class="bi bi-person-fill navbt btn btn-light px-2" name="vhod"></a>  
-            </div> 
+                </div>
         </div>
       
           <!-- Название сайта -->
-          <div class="text-center mb-3">
-            <h1 class="m-0 fs-2 fw-bold"><a href="{% url 'avtoriz' %}" name="index" class="text-decoration-none text-dark">Books For Everyone</a></h1>
-          </div>
+            <div class="text-center mb-3">
+                <h1 class="m-0 fs-2 fw-bold">
+                    <a href="{% if user.is_staff %}{% url 'moderator_dashboard' %}{% else %}{% url 'avtoriz' %}{% endif %}" name="index" class="text-decoration-none text-dark">
+                        Books For Everyone
+                    </a>
+                </h1>
+            </div>
       
           <!-- Основная навигация -->
           <nav class="d-flex gap-5 fs-5 position-relative">
