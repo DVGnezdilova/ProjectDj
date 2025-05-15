@@ -16,9 +16,9 @@
     <header class="bg-light p-2">
         <div class="container">
             <!-- Верхняя строка с мелкими ссылками -->
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="small text-muted d-flex align-items-center">
-                    <a href="#" id="supportButton" class="text-decoration-none text-muted me-2 fs-6">Обратная связь</a>
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="small text-muted d-flex align-items-center">
+                <a href="#" id="supportButton" class="text-decoration-none text-muted me-2 fs-6">Обратная связь</a>
                 <!-- Модальное окно -->
                 <div id="modal" class="modal">
                     <div class="modal-content">
@@ -28,6 +28,17 @@
                         </p>
                     </div>
                 </div>
+                <span class="text-muted mx-2">|</span>
+                <a href="#" id="supportButton3" class="text-decoration-none text-muted fs-6">Наши магазины</a>
+                <div id="modal3" class="modal">
+                    <div class="modal-content">
+                        <a class="close3 d-flex justify-content-end text-decoration-none text-dark">&times;</a>
+                        <p class="mx-3">
+                            Данный раздел находится в разработке, приносим свои извинения. Скоро можно будет смотреть магазины сети на карте прямо на сайте, а пока вы можете воспользоваться навигационнываи картами или позвонить на бесплатный номер <strong>+7 990 088 22 00</strong>, написать нам на почту <a href="mailto:books4everyone@mail.ru">books4everyone@mail.ru</a> для обращения за помощью.
+                        </p>
+                    </div>
+                </div>
+            </div>
                     <span class="text-muted mx-2">|</span>
                     <a href="#" class="text-decoration-none text-muted fs-6">Наши магазины</a>
                 </div>
@@ -129,28 +140,16 @@
     </div>
 
     <!-- Подвал -->
-    <footer class="bg-light p-5 mt-auto ">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <p class="mb-3">Где ещё нас можно найти:</p>
+    <footer class="bg-light p-5 mt-avto">
+        <div class="container d-flex justify-content-center">
                     <div class="d-flex gap-3">
                         <button class="btn btn-light"><i class="bi bi-facebook"></i></button>
-                        <button class="btn btn-light"><i class="bi bi-vk"></i></button>
+                        <button class="btn btn-light"><i class="bi bi-instagram"></i></button>
                         <button class="btn btn-light"><i class="bi bi-youtube"></i></button>
                     </div>
                 </div>
-                <div class="col-md-6 text-md-end">
-                    <p class="mb-3">Хотите получать рассылку о новинках? Укажите вашу почту!</p>
-                    <form>
-                        <div class="input-group">
-                            <input type="email" class="form-control" placeholder="ivanov.ivan@mail.ru" aria-label="Email input with button addon">
-                            <button class="btn btn-secondary" type="button"><i class="bi bi-arrow-right"></i></button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+        <p class="d-flex justify-content-center my-3">© BookForEveryone</p>
+
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
@@ -179,6 +178,27 @@
             }
         });
         });
+        const modal3 = document.getElementById('modal3');  // ← Убедись, что ID правильный
+        const supportButton3 = document.getElementById('supportButton3');
+        const closeButton3 = document.querySelector('.close3');
+
+        if (supportButton3 && modal3 && closeButton3) {
+            supportButton3.addEventListener('click', () => {
+                modal3.style.display = 'block';  // ✅ Теперь открытие modal3
+            });
+
+            closeButton3.addEventListener('click', () => {
+                modal3.style.display = 'none';  // ✅ Закрытие modal3
+            });
+
+            window.addEventListener('click', (event) => {
+                if (event.target === modal3) {
+                    modal3.style.display = 'none';
+                }
+            });
+        } else {
+            console.warn("Модальное окно 3 или кнопка не найдены");
+        }
     </script>
 </body>
 </html>
