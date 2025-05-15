@@ -65,6 +65,13 @@
 <!-- Основная часть -->
 <main class="container mt-4 mb-5">
     <div class="row g-4 align-items-start">
+        <nav aria-label="Breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'index' %}" name="index"><b>Главная</b></a></li>
+                <li class="breadcrumb-item text-decoration-none"><a href="#" name="index">Каталог</a></li>
+                <li class="breadcrumb-item active">{{ book.title }}</li>
+            </ol>
+        </nav>
         <!-- Левая колонка: фото -->
         <div class="col-md-5 d-flex flex-column">
             <!-- Фото книги (фиксированный размер) -->
