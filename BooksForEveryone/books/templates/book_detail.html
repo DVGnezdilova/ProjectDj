@@ -300,12 +300,14 @@
         {% if articles %}
             <!-- Вывод первых двух статей -->
             {% for article in articles|slice:":2" %}
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ article.title_article }}</h5>
-                        <p class="card-text">{{ article.text_article|truncatewords:20 }}</p>
+                <a href="{% url 'article2' article.id %}" class="text-decoration-none text-dark">
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ article.title_article }}</h5>
+                            <p class="card-text">{{ article.text_article|truncatewords:20 }}</p>
+                        </div>
                     </div>
-                </div>
+                </a>
             {% endfor %}
 
             <!-- Кнопка "Еще статьи", если их больше 2 -->
@@ -313,13 +315,15 @@
                 <button id="loadMoreArticles" class="btn btn-link d-block mx-auto">Еще статьи</button>
                 <div id="all-articles" class="d-none">
                     {% for article in articles|slice:"2:" %}
-                        <div class="card mb-3">
-                            <div class="card-body">
-                                <h5 class="card-title">{{ article.title_article }}</h5>
-                                <p class="card-text">{{ article.text_article|truncatewords:20 }}</p>
-                                <a href="{% url 'article_detail' article.id %}" class="btn btn-sm btn-link stretched-link">Читать полностью</a>
+                        <a href="{% url 'article2' article.id %}" class="text-decoration-none text-dark">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ article.title_article }}</h5>
+                                    <p class="card-text">{{ article.text_article|truncatewords:20 }}</p>
+                                    <a href="{% url 'article2' article.id %}" class="btn btn-sm btn-link stretched-link">Читать полностью</a>
+                                </div>
                             </div>
-                        </div>
+                        </a>
                     {% endfor %}
                 </div>
             {% endif %}

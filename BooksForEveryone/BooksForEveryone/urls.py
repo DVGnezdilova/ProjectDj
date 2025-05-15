@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path
-from books.views import index, vhod, regist,moderator_dashboard,moderator_panel,delete_review_mod,create_review_mod, get_books_for_moderator, get_users_for_moderator, publish_review, reject_review,revert_review, avtoriz, journal, catalog, publishers_list, journal2, catalog2, publishers_list2, shopcart, checkout, cart_change_quantity, remove_from_cart, add_to_cart,favourite,remove_from_favourite, add_to_favourite, remove_from_cart_by_book_id, lk,add_review, custom_logout, profile, update_profile, reviews, delete_review, book_detail, book_detail2
+from books.views import index, vhod, regist,moderator_dashboard,moderator_panel,delete_review_mod,create_review_mod, get_books_for_moderator, get_users_for_moderator, publish_review, reject_review,revert_review, avtoriz, journal, catalog, publishers_list, journal2, catalog2, publishers_list2, shopcart, checkout, cart_change_quantity, remove_from_cart, add_to_cart,favourite,remove_from_favourite, add_to_favourite, remove_from_cart_by_book_id, lk,add_review, custom_logout, profile, update_profile, reviews, delete_review, book_detail, book_detail2, article, article2
 from django.urls import include, path
 
 urlpatterns = [
@@ -60,6 +60,8 @@ urlpatterns = [
     path('logout/', custom_logout, name='logout'),
     path('book/<int:book_id>/', book_detail, name='book_detail'),
     path('book2/<int:book_id>/', book_detail2, name='book_detail2'),
+    path('article/<int:article_id>/', article, name='article'),
+    path('article2/<int:article_id>/', article2, name='article2'),
     path('__debug__/', include('debug_toolbar.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

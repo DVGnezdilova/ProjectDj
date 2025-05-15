@@ -238,32 +238,34 @@
         <h4>Статьи по этой книге</h4>
 
         {% if articles %}
-            <!-- Вывод первых двух статей -->
-            {% for article in articles|slice:":2" %}
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ article.title_article }}</h5>
-                        <p class="card-text">{{ article.text_article|truncatewords:20 }}</p>
-                    </div>
-                </div>
-            {% endfor %}
-
-            <!-- Кнопка "Еще статьи", если их больше 2 -->
-            {% if articles|length > 2 %}
-                <button id="loadMoreArticles" class="btn btn-link d-block mx-auto">Еще статьи</button>
-                <div id="all-articles" class="d-none">
-                    {% for article in articles|slice:"2:" %}
+                <!-- Вывод первых двух статей -->
+                {% for article in articles|slice:":2" %}
+                    <a href="{% url 'article' article.id %}" class="text-decoration-none text-dark">
                         <div class="card mb-3">
                             <div class="card-body">
                                 <h5 class="card-title">{{ article.title_article }}</h5>
                                 <p class="card-text">{{ article.text_article|truncatewords:20 }}</p>
-                                <a href="{% url 'article_detail' article.id %}" class="btn btn-sm btn-link stretched-link">Читать полностью</a>
                             </div>
                         </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
+                    </a>
+                {% endfor %}
 
+                <!-- Кнопка "Еще статьи", если их больше 2 -->
+                {% if articles|length > 2 %}
+                    <button id="loadMoreArticles" class="btn btn-link d-block mx-auto">Еще статьи</button>
+                    <div id="all-articles" class="d-none">
+                        {% for article in articles|slice:"2:" %}
+                            <a href="{% url 'article' article.id %}" class="text-decoration-none text-dark">
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ article.title_article }}</h5>
+                                        <p class="card-text">{{ article.text_article|truncatewords:20 }}</p>
+                                    </div>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% endif %}
         {% else %}
             <p>Нет статей по этой книге.</p>
         {% endif %}

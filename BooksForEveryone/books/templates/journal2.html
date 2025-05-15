@@ -126,7 +126,9 @@
                                         <p class="card-text">{{ article.text_article|truncatewords:20 }}</p>
                                     </div>
                                     <div class="card-btn d-flex justify-content-center mt-3">
-                                        <a href="#" class="btn btn-secondary w-100">Читать</a>
+                                        <a href="{% url 'article2' article.id%}" class="btn btn-secondary w-100">
+                                            Читать
+                                        </a>
                                     </div>
                                 </div>
                             </div>

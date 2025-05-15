@@ -21,7 +21,6 @@ from django.db import models
 
 
 def index(request):
-
     # Фильтрация книг для "Новинок"
     new_books = Book.objects.filter(
         year__year=2025  # Книги, выпущенные в 2024 году
@@ -1113,14 +1112,78 @@ def book_detail2(request, book_id):
     articles = Article.objects.filter(id_book=book)
 
     genres = Book.objects.values_list('genre', flat=True).distinct()
-    cart_count = 0
-    if request.user.is_authenticated:
-        cart_count = ShoppingCart.objects.filter(id_user=request.user).count()
+
     # Передаём всё в шаблон
     return render(request, 'book_detail2.html', {
         'book': book,
         'reviews': reviews,
         'articles': articles,      
         'genres': genres,
-        'cart_count': cart_count
+
+    })
+
+def article(request, article_id):
+    # Получаем статью по ID
+    article = get_object_or_404(Article.objects.select_related('id_book'), id=article_id)
+    
+    book = article.id_book  # Получаем книгу из статьи
+    
+    # Так как id_writer ManyToMany, используем prefetch_related (или просто .all() при выводе)
+    writers = book.id_writer.all()  # ← так можно получить авторов
+
+    # Рассчитываем цену книги со скидкой
+    if book.sale and book.sale.isdigit():
+        discount_percentage = int(book.sale)
+        discounted_price = round(book.discount * (1 - discount_percentage / 100))
+    else:
+        discounted_price = book.discount
+
+    genres = Book.objects.values_list('genre', flat=True).distinct()
+
+    return render(request, 'article.html', {
+        'article': article,
+        'book': book,
+        'writers': writers,
+        'discounted_price': discounted_price,
+        'genres': genres,
+
+    })
+
+def article2(request, article_id):
+    # Получаем статью по ID
+    article = get_object_or_404(Article.objects.select_related('id_book'), id=article_id)
+    
+    book = article.id_book  # Получаем книгу из статьи
+    
+    # Так как id_writer ManyToMany, используем prefetch_related (или просто .all() при выводе)
+    writers = book.id_writer.all()  # ← так можно получить авторов
+
+    # Рассчитываем цену книги со скидкой
+    if book.sale and book.sale.isdigit():
+        discount_percentage = int(book.sale)
+        discounted_price = round(book.discount * (1 - discount_percentage / 100))
+    else:
+        discounted_price = book.discount
+
+    cart_books_ids = []
+    cart_count = 0
+    user_fav_books = []
+
+    if request.user.is_authenticated:
+        cart_books_ids = list(
+            ShoppingCart.objects.filter(id_user=request.user).values_list('id_book__id', flat=True)
+        )
+        cart_count = ShoppingCart.objects.filter(id_user=request.user).count()
+        user_fav_books = list(request.user.favourite_set.values_list('id_book__id', flat=True))
+    genres = Book.objects.values_list('genre', flat=True).distinct()
+
+    return render(request, 'article2.html', {
+        'article': article,
+        'book': book,
+        'writers': writers,
+        'discounted_price': discounted_price,
+        'cart_count': cart_count, 
+        'cart_books_ids': cart_books_ids,
+        'user_fav_books': user_fav_books,
+        'genres': genres
     })

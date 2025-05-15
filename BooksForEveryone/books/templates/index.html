@@ -283,7 +283,11 @@
 
         <!-- Latest Articles -->
         <section class="mb-5">
-            <h2 class="text-center mb-4">Последние статьи</h2>
+            <div class="d-flex justify-content-between align-items-center mb-5">
+                <h2 class="flex-grow-1 text-center mb-0">Последние статьи</h2>
+                <a href="{% url 'journal' %}" class="btn btn-link">Еще статьи</a>
+            </div>
+
             
             <!-- Сетка статей -->
             <div class="row g-4 justify-content-center">
@@ -303,7 +307,7 @@
 
                                     <!-- Кнопка "Читать" -->
                                     <div class="card-btn d-flex justify-content-center mt-3">
-                                        <a href="" class="btn btn-secondary w-100">
+                                        <a href="{% url 'article' article.id%}" class="btn btn-secondary w-100">
                                             Читать
                                         </a>
                                     </div>
@@ -324,11 +328,7 @@
             </div>
 
             <!-- Кнопка "Еще статьи", если их больше 3 -->
-            {% if articles|length > 3 %}
-                <div class="text-start mt-3">
-                    <a href="{% url 'journal2' %}" class="btn btn-link">Еще статьи</a>
-                </div>
-            {% endif %}
+
         </section>
 
 
