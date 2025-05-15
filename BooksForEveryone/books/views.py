@@ -1,4 +1,6 @@
 from django.db.models import Avg
+from django.forms import FloatField
+from django.db.models.functions import Cast
 
 from .forms import AccountForm
 from .forms import ReviewForm
@@ -25,6 +27,13 @@ def index(request):
         year__year=2025  # Книги, выпущенные в 2024 году
     ).prefetch_related('id_writer')[:4] 
 
+    best_books = Book.objects.filter(review__status_rev='Опубликован').annotate(
+        avg_rating=Avg(Cast('review__rating', output_field=models.FloatField()))
+    ).order_by('-avg_rating')[:4]
+
+    latest_articles = Article.objects.all().order_by('-id')[:3]
+
+
     # Расчет цены со скидкой для всех книг
     def calculate_discounted_price(books):
         for book in books:
@@ -37,6 +46,7 @@ def index(request):
 
     # Применяем расчет цены со скидкой к обоим наборам книг
     calculate_discounted_price(new_books)
+    calculate_discounted_price(best_books)
 
     # Получение уникальных жанров из базы данных
     genres = Book.objects.values_list('genre', flat=True).distinct()
@@ -44,7 +54,9 @@ def index(request):
     # Передаем данные в шаблон
     return render(request, 'index.html', {
         'new_books': new_books,
-        'genres': genres  # Добавляем жанры в контекст
+        'genres': genres,  # Добавляем жанры в контекст
+        'best_books': best_books,
+        'articles': latest_articles
     })
 
 from django.contrib.auth import authenticate, login
@@ -338,12 +350,26 @@ def revert_review(request, review_id):
 
     # return render(request, 'regist.html')
 
-from django.views.decorators.cache import cache_page
+# from django.views.decorators.cache import cache_page
+from django.db.models import Case, When, Value, IntegerField
 # @cache_page(60 * 15)  # кэш на 15 минут
 def avtoriz(request):
     # Получаем книги
     recommended_books = Book.objects.filter(genre="Фэнтези").prefetch_related('id_writer')[:4]
     new_books = Book.objects.filter(year__year=2025).prefetch_related('id_writer')[:4]
+
+    best_books = Book.objects.filter(review__status_rev='Опубликован').annotate(
+        avg_rating=Avg(Cast('review__rating', output_field=models.FloatField()))
+    ).order_by('-avg_rating')[:4]
+
+    latest_articles = Article.objects.all().order_by('-id')[:3]
+
+    viewed_book_ids = request.session.get('viewed_books', [])
+
+    viewed_books = []
+    if viewed_book_ids:
+        viewed_books = Book.objects.filter(id__in=viewed_book_ids).order_by(Case(*[When(id=id, then=pos) for pos, id in enumerate(viewed_book_ids)],output_field=models.IntegerField()))
+
 
     # Расчет цен со скидкой
     def calculate_discounted_price(books):
@@ -356,6 +382,9 @@ def avtoriz(request):
 
     calculate_discounted_price(recommended_books)
     calculate_discounted_price(new_books)
+    calculate_discounted_price(viewed_books)
+    calculate_discounted_price(best_books)
+
 
     genres = Book.objects.values_list('genre', flat=True).distinct()
     
@@ -370,14 +399,20 @@ def avtoriz(request):
         )
         cart_count = ShoppingCart.objects.filter(id_user=request.user).count()
 
+
     return render(request, 'avtoriz.html', {
         'recommended_books': recommended_books,
         'new_books': new_books,
+        'best_books': best_books,
+        'articles': latest_articles,
         'genres': genres,
         'user_fav_books': fav_user,
         'cart_books_ids': cart_books_ids, 
-        'cart_count': cart_count # ← Передаем в шаблон
+        'cart_count': cart_count, 
+        'viewed_books': viewed_books,
+        'show_viewed_section': len(viewed_book_ids) > 0
     })
+
 
 
 def journal(request):
@@ -1039,6 +1074,13 @@ def book_detail(request, book_id):
     cart_count = 0
     if request.user.is_authenticated:
         cart_count = ShoppingCart.objects.filter(id_user=request.user).count()
+
+    viewed_books = request.session.get('viewed_books', [])
+    
+    if book.id not in viewed_books:
+        viewed_books.insert(0, book.id)  # В начало списка
+        viewed_books = viewed_books[:4]  # Ограничиваем до 5 последних книг
+        request.session['viewed_books'] = viewed_books
     # Передаём всё в шаблон
     return render(request, 'book_detail.html', {
         'book': book,
