@@ -105,7 +105,19 @@
                                 <div class="card-body">
                                     <p><strong>Статус:</strong> {{ order.status_ord }}</p>
                                     <p><strong>Сумма:</strong> {{ order.total_order_price }} ₽</p>
-
+                                    {% if order.status_ord == 'Выполнен' %}
+                                        {% if order.receipt %}
+                                            <a href="{{ order.receipt.url }}" class="btn btn-success mb-3" target="_blank">
+                                                <i class="bi bi-receipt"></i> Открыть чек
+                                            </a>
+                                        {% else %}
+                                            <a href="{% url 'generate_receipt' order.id %}" class="btn btn-outline-primary mb-3">
+                                                Скачать чек
+                                            </a>
+                                        {% endif %}
+                                    {% else %}
+                                        <button class="btn btn-secondary mb-3" disabled>Чек можно получить только после выполнения заказа</button>
+                                    {% endif %}
                                     <h6>Книги в заказе:</h6>
                                     <ul class="list-group list-group-flush mt-3">
                                         {% for item in order.items_list %}

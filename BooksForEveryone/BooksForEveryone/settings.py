@@ -138,6 +138,9 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
 
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+FONTS_DIR = os.path.join(BASE_DIR, 'fonts')
+
 MEDIA_URL = '/media/'  # URL для доступа к медиа-файлам
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # Путь к папке с медиа-файлами
 

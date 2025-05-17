@@ -1,3 +1,5 @@
+import os
+from django.conf import settings
 from django.db.models import Avg
 from django.forms import FloatField
 from django.db.models.functions import Cast
@@ -13,7 +15,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from django.db.models import Q
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.urls import reverse
 from django.contrib.auth import logout
 
@@ -897,6 +899,134 @@ def lk(request):
         'user_reviews_books': user_reviews_books, 
         'form': review_form,
     })
+
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib import colors
+
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+
+# Регистрация шрифта
+
+from io import BytesIO
+def generate_receipt(request, order_id):
+    # Получаем заказ
+    order = get_object_or_404(Order.objects.prefetch_related('items__id_book'), id=order_id)
+
+    # Проверяем доступ
+    if order.id_user != request.user and not request.user.is_staff:
+        return HttpResponse("Доступ запрещён", status=403)
+
+    
+    # Регистрация шрифтов
+    FONTS_DIR = os.path.join(settings.BASE_DIR, 'fonts')
+
+    try:
+        pdfmetrics.getFont('DejaVuSans')
+    except KeyError:
+        font_path = os.path.join(FONTS_DIR, 'DejaVuSans.ttf')
+        if os.path.exists(font_path):
+            pdfmetrics.registerFont(TTFont('DejaVuSans', font_path))
+        else:
+            raise FileNotFoundError(f"Файл шрифта не найден: {font_path}")
+
+    try:
+        pdfmetrics.getFont('DejaVuSans-Bold')
+    except KeyError:
+        bold_font_path = os.path.join(FONTS_DIR, 'DejaVuSans-Bold.ttf')
+        if os.path.exists(bold_font_path):
+            pdfmetrics.registerFont(TTFont('DejaVuSans-Bold', bold_font_path))
+        else:
+            raise FileNotFoundError(f"Файл шрифта не найден: {bold_font_path}")
+
+    # Генерация PDF
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4)
+    styles = getSampleStyleSheet()
+
+    elements = []
+
+    # Заголовок с жирным шрифтом
+    styles['Title'].fontName = 'DejaVuSans-Bold'
+    styles['Normal'].fontName = 'DejaVuSans'
+
+    elements.append(Paragraph(f"Чек заказа #{order.id}", styles['Title']))
+    elements.append(Spacer(1, 24))
+
+    # Детали заказа
+    elements.append(Paragraph(f"Дата: {order.date_ord.strftime('%d.%m.%Y')}", styles['Normal']))
+    elements.append(Paragraph(f"Номер покупателя: {request.user.username}", styles['Normal']))
+    elements.append(Paragraph(f"Магазин: {order.id_shop.street}", styles['Normal']))
+    elements.append(Spacer(1, 12))
+
+
+    # Данные таблицы
+    data = [['Книга', 'Автор(ы)', 'Цена', 'Кол-во', 'Сумма']]
+    total_price = 0
+
+    for item in order.items.all():
+        book = item.id_book
+        count = int(item.count_ord)
+
+        # Рассчитываем цену со скидкой
+        if book.sale and book.sale.isdigit():
+            price = round(book.discount * (1 - int(book.sale) / 100))
+        else:
+            price = book.discount
+
+        total_item = price * count
+        total_price += total_item
+
+        authors = ", ".join(writer.nickname for writer in book.id_writer.all())
+        data.append([book.title, authors, f"{price} ₽", str(count), f"{total_item} ₽"])
+
+    # Таблица с оформлением
+    table = Table(data)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2c3e50')),  # Темно-синий фон для заголовков
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTSIZE', (0, 0), (-1, 0), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#34495e')),
+        ('FONTNAME', (0, 0), (-1, 0), 'DejaVuSans-Bold'),
+        ('FONTNAME', (0, 1), (-1, -1), 'DejaVuSans'),
+        ('FONTSIZE', (0, 1), (-1, -1), 10),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+    ]))
+
+    elements.append(table)
+    elements.append(Spacer(1, 24))
+
+    # Итого
+    elements.append(Paragraph(f"<b>Общая сумма:</b> {total_price} ₽", styles['Normal']))
+
+    # Генерируем PDF
+    doc.build(elements)
+    pdf_value = buffer.getvalue()
+    buffer.close()
+
+    # Сохраняем в модель Order
+    receipt_dir = os.path.join(settings.MEDIA_ROOT, 'receipts')
+    os.makedirs(receipt_dir, exist_ok=True)
+
+    receipt_path = os.path.join(receipt_dir, f'receipt_{order.id}.pdf')
+    with open(receipt_path, 'wb') as f:
+        f.write(pdf_value)
+
+    order.receipt.name = f'receipts/receipt_{order.id}.pdf'
+    order.save(update_fields=['receipt'])
+
+    # Возвращаем файл пользователю
+    response = HttpResponse(pdf_value, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename=receipt_{order.id}.pdf'
+
+    return response
 
 def add_review(request):
     if request.method == "POST":
