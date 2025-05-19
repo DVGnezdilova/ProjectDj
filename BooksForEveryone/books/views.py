@@ -126,6 +126,7 @@ def moderator_dashboard(request):
         return redirect('vhod')
 
     new_books = Book.objects.filter(year__year=2025).prefetch_related('id_writer')[:4]
+    # new_orders = Book.objects.exclude(year__year=2025)  исключит книги 2025
 
     # Расчет цен со скидкой
     def calculate_discounted_price(books):
@@ -154,7 +155,7 @@ def moderator_panel(request):
     query = request.GET.get('q')
     status_filter = request.GET.get('status')
 
-    reviews_list = Review.objects.all().order_by('-created_at')
+    reviews_list = Review.custom_order.all()
 
     if status_filter:
         reviews_list = reviews_list.filter(status_rev=status_filter)
@@ -208,6 +209,7 @@ def get_books_for_moderator(request):
         orderitem__id_order__status_ord='Выполнен'
     ).exclude(review__id_user=user_id).distinct()
 
+
     data = [{'id': b.id, 'title': b.title} for b in books]
     return JsonResponse({'books': data})
 
@@ -222,6 +224,7 @@ def get_users_for_moderator(request):
         order__items__id_book=book_id,
         order__status_ord='Выполнен'
     ).exclude(review__id_book=book_id).distinct()
+    
 
     data = [{
         'id': u.id,
@@ -453,6 +456,7 @@ def catalog(request, genre=None):
             Q(title__icontains=query) | 
             Q(id_writer__nickname__icontains=query)
         ).distinct()
+        # books = Book.objects.filter(title__contains=query)
 
     # Пагинация
     paginator = Paginator(books, 4)  # 2 элемента на странице
@@ -1169,6 +1173,7 @@ def delete_review(request, review_id):
 def custom_logout(request):
     logout(request)
     return redirect('index')  # или 'index'
+
 
 
 def book_detail(request, book_id):

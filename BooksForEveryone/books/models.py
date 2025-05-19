@@ -350,6 +350,7 @@ class OrderItem(models.Model):
 #         # Объединяем QuerySet'ы: сначала "Обрабатывается", затем остальные
 #         return list(processing) + list(others)
 
+from .managers import ReviewManager
 class Review(models.Model):
     id_user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="id_us", related_name='review',null=False, blank=False) #можно делать вызов кодом всех элементов users.review.all() все отзывы конкретного пользователя
     id_book = models.ForeignKey(Book, on_delete=models.CASCADE, verbose_name="id_bk", related_name='review',null=False, blank=False) #можно делать вызов кодом всех элементов book.review.all() все отзывы на конкретную книгу
@@ -359,6 +360,8 @@ class Review(models.Model):
     created_at = models.DateTimeField(default=timezone.now, verbose_name="Время создания отзыва",null=False, blank=False)  #записывает дату создания отзыва
 
     # objects = ReviewManager()
+    objects = models.Manager()  # стандартный менеджер
+    custom_order = ReviewManager()  # наш новый менеджер
     
     def save(self, *args, **kwargs):
         # Если объект только создаётся (нет ID), установим статус по умолчанию

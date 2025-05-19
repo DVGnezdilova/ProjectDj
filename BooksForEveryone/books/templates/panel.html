@@ -1,4 +1,5 @@
 {% load static %}
+{% load custom_tags %}
 <!-- <link rel="stylesheet" href="{% static 'index.css' %}"> -->
 <!DOCTYPE html>
 <html lang="en">
@@ -97,6 +98,8 @@
             Отказ в публикации
         </a>
     </div>
+
+    <p class="d-flex justify-content-center">Всего отзывов: {% total_reviews %}</p>
 
     <!-- Список отзывов -->
     {% if reviews %}

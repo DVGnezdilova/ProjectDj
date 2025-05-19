@@ -25,21 +25,31 @@ class AccountForm(forms.ModelForm):
         if commit:
             account.save()
         return account
-
+    class Media:
+        css = {
+            'all': ('css/account_form.css',)
+        }
 from .models import Review
 
 class ReviewForm(forms.ModelForm):
     class Meta:
         model = Review
         fields = ['text_review', 'rating']
+        exclude = ['status_rev', 'created_at']
         widgets = {
             'text_review': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 4,
-                'placeholder': 'Напишите ваш отзыв о книге'
+                'placeholder': 'Напишите ваш отзыв о книге',
+                
             }),
             'rating': forms.HiddenInput(),  # ← теперь рейтинг будет управляться JS
         }
+        labels = {
+            'text_review': 'Ваш отзыв',
+            'rating': 'Оценка'
+        }
+        
 
     def clean_text_review(self):
         text = self.cleaned_data.get('text_review')
@@ -67,7 +77,10 @@ class ModeratorReviewForm(forms.Form):
     text_review = forms.CharField(
         widget=forms.Textarea(attrs={'rows': 4}),
         label="Текст отзыва",
-        required=True
+        required=True,
+        error_messages = {
+            'text_review': {'required': 'Вы пропустили это поле'}
+        }
     )
     rating = forms.ChoiceField(
         choices=COUNT_CHOICES,
@@ -78,6 +91,7 @@ class ModeratorReviewForm(forms.Form):
         required=True,
         label="Я подтверждаю, что пользователь действительно купил эту книгу"
     )
+   
 
     def __init__(self, *args, **kwargs):
         users = kwargs.pop('users', None)

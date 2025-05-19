@@ -1,4 +1,5 @@
 {% load static %}
+{% load custom_tags %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -99,6 +100,7 @@
                 <div id="orders" class="tab-pane fade show active">
                     <h2 class="d-flex justify-content-center">Ваши заказы</h2>
                     {% if orders %}
+                        <p class="d-flex justify-content-center">Вы оформили заказы в количестве: {% user_orders_count %}</p>
                         {% for order in orders %}
                             <div class="card mb-4">
                                 <div class="card-header">Заказ #{{ order.id }} • {{ order.date_ord|date:"d.m.Y" }}</div>
@@ -189,6 +191,13 @@
             <div class="mb-3">
                 {{ form.text_review.label_tag }}
                 {{ form.text_review }}
+                {% if form.text_review.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.text_review.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
             </div>
 
             <!-- Поле для рейтинга -->
