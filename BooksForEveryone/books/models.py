@@ -373,7 +373,7 @@ class Review(models.Model):
     class Meta:
         verbose_name = "отзыв"
         verbose_name_plural = "Отзывы"
-        ordering = ['-created_at']  # сортировка по дате создания (новые сверху), !!! убрала потому что есть в модальном менеджере выше 
+        ordering = ['-created_at']  # сортировка по дате создания (новые сверху), 
 
     def __str__(self):
         return f"Отзыв от пользователя {self.id_user}"

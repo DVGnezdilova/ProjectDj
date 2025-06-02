@@ -146,7 +146,6 @@ def moderator_dashboard(request):
         'new_books': new_books,
         'genres': genres,
     })
-
 def moderator_panel(request):
     if not request.user.is_staff:
         messages.error(request, "Доступ запрещён")
@@ -155,7 +154,8 @@ def moderator_panel(request):
     query = request.GET.get('q')
     status_filter = request.GET.get('status')
 
-    reviews_list = Review.custom_order.all()
+    # Используем QuerySet, а не list
+    reviews_list = Review.objects.all().order_by('-id')  # например
 
     if status_filter:
         reviews_list = reviews_list.filter(status_rev=status_filter)
@@ -168,14 +168,12 @@ def moderator_panel(request):
             Q(id_user__account__surname__icontains=query)
         ).distinct()
 
-    # Получаем всех пользователей и книги для формы
-    users = User.objects.all()
-    books = Book.objects.all()
-
     paginator = Paginator(reviews_list, 5)
     page_number = request.GET.get('page')
     reviews = paginator.get_page(page_number)
     genres = Book.objects.values_list('genre', flat=True).distinct()
+    users = User.objects.all()
+    books = Book.objects.all()
 
     return render(request, 'panel.html', {
         'reviews': reviews,

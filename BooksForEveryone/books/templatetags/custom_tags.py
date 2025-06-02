@@ -20,5 +20,4 @@ def user_orders_count(context):
 def get_similar_books(book_id):
     # Получаем книгу
     current_book = Book.objects.get(id=book_id)
-    # Возвращаем книги того же жанра
     return Book.objects.filter(genre=current_book.genre).exclude(id=current_book.id)[:3]
