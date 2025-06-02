@@ -65,5 +65,6 @@ urlpatterns = [
     path('article/<int:article_id>/', article, name='article'),
     path('article2/<int:article_id>/', article2, name='article2'),
     path('__debug__/', include('debug_toolbar.urls')),
+    path('api/', include('books.api.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
