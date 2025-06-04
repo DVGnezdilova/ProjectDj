@@ -307,77 +307,12 @@
             </div>
         </section>
         <!-- Bestsellers -->
-        <section class="mb-5">
-            <h2 class="text-center mb-4">Лучшее</h2>
+        <section id="top-rated-books" class="mb-5">
+            <h2 class="text-center mb-4">Лучшие книги</h2>
             <div class="catalog">
                 <div class="container">
-                    <div class="row row-equal-height g-4">
-                        {% for book in best_books %}
-                            <div class="col-md-3 mb-4">
-                                <a href="{% url 'book_detail' book.id %}" class="text-decoration-none text-dark">
-                                    <div class="products-inside d-flex flex-column h-100">
-                                        <!-- Изображение книги -->
-                                        <div class="products-img">
-                                            <img src="{{ book.photo }}" alt="{{ book.title }}" style="width: 100%; height: 400px; object-fit: cover; border-radius: 8px;">
-                                        </div>
-
-                                        <!-- Детали книги -->
-                                        <div class="products-details flex-grow-1 d-flex flex-column">
-
-                                            <!-- Название книги -->
-                                            <h4 class="book-title text-center mt-2">{{ book.title }}</h4>
-
-                                            <!-- Автор(ы) -->
-                                            <p class="author text-center small text-muted">
-                                                {% for writer in book.id_writer.all %}
-                                                    {{ writer.nickname }}
-                                                    {% if not forloop.last %}, {% endif %}
-                                                {% endfor %}
-                                            </p>
-
-                                            <!-- Рейтинг -->
-                                            <div class="d-flex justify-content-center text-warning mb-2">
-                                                {% with rating=book.get_avg_rating|default:0 %}
-                                                    {% for i in "12345" %}
-                                                        {% with current_rating=i|floatformat:"0"|add:"0" %}
-                                                            {% if rating >= current_rating %}
-                                                                <i class="bi bi-star-fill me-1"></i>
-                                                            {% else %}
-                                                                <i class="bi bi-star me-1"></i>
-                                                            {% endif %}
-                                                        {% endwith %}
-                                                    {% endfor %}
-                                                {% endwith %}
-                                            </div>
-
-                                            <!-- Цены -->
-                                            <div class="price-container mt-auto d-flex justify-content-between">
-                                                {% if book.sale %}
-                                                    <span class="old-price text-decoration-line-through small text-muted px-1">{{ book.discount }}&#8381;</span>
-                                                    <span class="new-price fw-bold">{{ book.discounted_price }}&#8381;</span>
-                                                    <span class="discount-badge bg-danger text-white px-1">{{ book.sale }}%</span>
-                                                {% else %}
-                                                    <span class="fw-bold">{{ book.discount }}&#8381;</span>
-                                                {% endif %}
-                                            </div>
-
-                                            <!-- Кнопки -->
-                                            <div class="d-flex justify-content-between mt-3">
-                                                <a href="{% url 'add_to_cart' book.id %}" class="btn btn-outline-primary w-100 me-2">В корзину</a>
-                                                <a href="{% url 'add_to_favourite' book.id %}"
-                                                class="btn {% if book.id in user_fav_books %}btn-danger{% else %}btn-outline-danger{% endif %} w-100 ms-2">
-                                                    <i class="bi {% if book.id in user_fav_books %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                        {% empty %}
-                            <div class="col-12">
-                                <p class="text-center">Нет книг с высоким рейтингом</p>
-                            </div>
-                        {% endfor %}
+                    <div class="row row-equal-height g-4" id="books-row">
+                        <!-- Книги будут добавляться сюда через JavaScript -->
                     </div>
                 </div>
             </div>
@@ -576,6 +511,74 @@
             console.warn("Модальное окно 3 или кнопка не найдены");
         }
         
+    </script>
+        <script>
+Promise.all([
+    fetch('/api/books/top_rated/').then(res => res.json()),
+    fetch('/api/cart/').then(res => res.json()),       // Список ID книг в корзине
+    fetch('/api/favourites/').then(res => res.json())  // Список ID избранных книг
+])
+.then(([books, cartBooks, favouriteBooks]) => {
+    const container = document.getElementById('books-row');
+
+    books.forEach(book => {
+        const isInCart = cartBooks.includes(book.id);
+        const isFavorite = favouriteBooks.includes(book.id);
+
+        const html = `
+            <div class="col-md-3 mb-4">
+                <a href="/book2/${book.id}" class="text-decoration-none text-dark">
+                    <div class="products-inside d-flex flex-column h-100">
+                        <div class="products-img">
+                            <img src="${book.photo}" class="w-100" style="height: 400px; object-fit: cover; border-radius: 8px;">
+                        </div>
+                        <div class="products-details flex-grow-1 d-flex flex-column">
+                            <h4 class="book-title text-center mt-2">${book.title}</h4>
+                            <p class="author text-center small text-muted">
+                                ${book.writers.map(w => w.nickname).join(', ')}
+                            </p>
+                            <div class="d-flex justify-content-center text-warning mb-2">
+                                ${[1, 2, 3, 4, 5].map(i =>
+                                    `<i class="bi bi-star${book.avg_rating >= i ? '-fill' : ''} me-1"></i>`
+                                ).join('')}
+                            </div>
+                            <div class="price-container mt-auto d-flex justify-content-between">
+                                <span class="old-price text-decoration-line-through small text-muted px-1">${book.discount}&#8381;</span>
+                                <span class="new-price fw-bold">${book.discounted_price}&#8381;</span>
+                                ${book.sale ? `<span class="discount-badge bg-danger text-white px-1">${book.sale}%</span>` : ''}
+                            </div>
+                            
+                            <!-- Здесь вставляем кнопки -->
+                            ${generateButtons(book.id, isInCart, isFavorite)}
+                        </div>
+                    </div>
+                </a>
+            </div>
+        `;
+        container.innerHTML += html;
+    });
+})
+.catch(err => {
+    console.error('Ошибка загрузки данных:', err);
+    container.innerHTML = '<p class="text-center">Не удалось загрузить книги.</p>';
+});
+    function generateButtons(bookId, isInCart, isFavorite) {
+    return `
+        <div class="d-flex justify-content-between mt-3">
+            <!-- Кнопка "Купить" -->
+            <a href="/cart/add/${bookId}" 
+               class="btn ${isInCart ? 'btn-primary' : 'btn-outline-primary'} w-100 me-2">
+                ${isInCart ? 'В корзине' : 'В корзину'}
+            </a>
+
+            <!-- Кнопка "Избранное" -->
+            <a href="/favourite/add/${bookId}" 
+               class="btn ${isFavorite ? 'btn-danger' : 'btn-outline-danger'} w-100 ms-2">
+                <i class="bi ${isFavorite ? 'bi-heart-fill' : 'bi-heart'}"></i>
+            </a>
+        </div>
+    `;
+}
     </script>
 </body>
 </html>

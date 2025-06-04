@@ -19,6 +19,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path
 from books.views import index, vhod, regist,moderator_dashboard,moderator_panel,delete_review_mod,create_review_mod, get_books_for_moderator, get_users_for_moderator, publish_review, reject_review,revert_review, avtoriz, journal, catalog, publishers_list, journal2, catalog2, publishers_list2, shopcart, checkout, cart_change_quantity, remove_from_cart, add_to_cart,favourite,remove_from_favourite, add_to_favourite, remove_from_cart_by_book_id, lk,  add_review, custom_logout, profile, update_profile, reviews, delete_review, book_detail, book_detail2, article, article2
+from books.api.views import get_cart_books,get_favourite_books
 from django.urls import include, path
 from books.views import generate_receipt
 
@@ -65,6 +66,8 @@ urlpatterns = [
     path('article/<int:article_id>/', article, name='article'),
     path('article2/<int:article_id>/', article2, name='article2'),
     path('__debug__/', include('debug_toolbar.urls')),
+    path('api/cart/', get_cart_books, name='cart_books'),
+    path('api/favourites/', get_favourite_books, name='favourite_books'),
     path('api/', include('books.api.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

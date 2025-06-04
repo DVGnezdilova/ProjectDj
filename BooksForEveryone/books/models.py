@@ -125,6 +125,25 @@ WRIT_CHOICES = (
     ('Соавтор', 'Соавтор'),
     ('Помощник', 'Помощник'))
 
+ERROR_TYPES_CHOICES =(
+    ('Проблема с заказом', 'Проблема с заказом'),
+    ('Проблема с отзывом', 'Проблема с отзывом'),
+    ('Ошибка в личных данных', 'Ошибка в личных данных'),
+    ('Ошибка в информации на сайте', 'Ошибка в информации на сайте'),
+    ('Другое', 'Другое'))
+
+class Feedback(models.Model):
+    type =models.CharField(choices=ERROR_TYPES_CHOICES, verbose_name="Тип ошибки", null=False, blank=False) 
+    message = models.TextField(verbose_name="Сообщение")
+    email = models.EmailField(null=False, blank=False,verbose_name="Email пользователя")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания заявки")
+    def __str__(self):
+        return f"{self.type()} — {self.email}"
+    class Meta:
+        verbose_name = "заявка" #надпись сверху страницы таблицы
+        verbose_name_plural = "Обратная связь" #переименовали таблицы на русский
+
+
 class Writer(models.Model):
     nickname = models.CharField(max_length=60, verbose_name="Псевдоним", null=False, blank=False)
     photo_writ = models.TextField(verbose_name="Фото", default='https://vmulebki.gosuslugi.ru/netcat_files/9/148/1.jpg', blank=False)
@@ -162,6 +181,9 @@ class BookWriter(models.Model):
     def __str__(self):
         return f"{self.writer.nickname} - {self.book.title} ({self.role})"
 
+
+from simple_history.models import HistoricalRecords
+
 class Book(models.Model):
     isbn = models.CharField(max_length=17,verbose_name="ISBN",null=False, blank=False)
     title = models.CharField(max_length=50, verbose_name="Название",null=False, blank=False)
@@ -179,17 +201,21 @@ class Book(models.Model):
     discount = models.PositiveSmallIntegerField(verbose_name="Цена", null=False, blank=False)
     sale = models.CharField(max_length=3, choices=SALE_CHOICES, verbose_name="Скидка", null=True, blank=False)
     description = models.TextField(verbose_name="Описание", null=False, blank=False)
+    history = HistoricalRecords()
     
     class Meta:
         verbose_name = "книгу"
         verbose_name_plural = "Книги"
 
         #собст. функц. метод
+    
     def get_avg_rating(self):
         avg = self.review.filter(status_rev='Опубликован').annotate(
             rating_as_float=Cast('rating', output_field=FloatField())
         ).aggregate(avg_rating=Avg('rating_as_float'))
         return round(avg['avg_rating'], 1) if avg['avg_rating'] else 0
+    
+    
     
     def get_published_reviews(self):
         return self.review.filter(status_rev='Опубликован')

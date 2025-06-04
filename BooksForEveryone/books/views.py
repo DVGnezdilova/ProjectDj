@@ -28,9 +28,9 @@ def index(request):
         year__year=2025  # Книги, выпущенные в 2024 году
     ).prefetch_related('id_writer')[:4] 
 
-    best_books = Book.objects.filter(review__status_rev='Опубликован').annotate(
-        avg_rating=Avg(Cast('review__rating', output_field=models.FloatField()))
-    ).order_by('-avg_rating')[:4]
+    # best_books = Book.objects.filter(review__status_rev='Опубликован').annotate(
+    #     avg_rating=Avg(Cast('review__rating', output_field=models.FloatField()))
+    # ).order_by('-avg_rating')[:4]
 
     latest_articles = Article.objects.all().order_by('-id')[:3]
 
@@ -47,7 +47,7 @@ def index(request):
 
     # Применяем расчет цены со скидкой к обоим наборам книг
     calculate_discounted_price(new_books)
-    calculate_discounted_price(best_books)
+    # calculate_discounted_price(best_books)
 
     # Получение уникальных жанров из базы данных
     genres = Book.objects.values_list('genre', flat=True).distinct()
@@ -56,7 +56,6 @@ def index(request):
     return render(request, 'index.html', {
         'new_books': new_books,
         'genres': genres,  # Добавляем жанры в контекст
-        'best_books': best_books,
         'articles': latest_articles
     })
 

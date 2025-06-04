@@ -1,10 +1,23 @@
 from django.contrib import admin
-from books.models import Writer, PublishingHouse, BookWriter, Book, Account, Article, Shop, ShoppingCart, Favourite, Order, OrderItem, Review
+from books.models import Writer, PublishingHouse, BookWriter, Book, Account, Article, Shop, ShoppingCart, Favourite, Order, OrderItem, Review,Feedback
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 
 #from django.contrib.auth.admin import UserAdmin
 # from django.contrib.auth.models import User
+
+@admin.register(Feedback)
+class FeedbackAdmin(admin.ModelAdmin):
+    list_display = ('type', 'email', 'created_at')
+    list_filter = ('type',)
+    search_fields = ('email', 'message')
+    readonly_fields = ('created_at',)
+    fieldsets = (
+        (None, {
+            'fields': ('type', 'message', 'email', 'created_at')
+        }),
+    )
+    ordering = ('-created_at',)
 
 
 @admin.register(Writer) 
@@ -36,9 +49,10 @@ class BookWriterAdmin(admin.ModelAdmin):
     search_fields = ('writer','book',)   #!!!!добавить поиск по писателю
     # raw_id_fields = ('id_publish',)
 
+from simple_history.admin import SimpleHistoryAdmin
 
 @admin.register(Book) 
-class BookAdmin(admin.ModelAdmin): 
+class BookAdmin(SimpleHistoryAdmin): 
     list_display = ('id', 'isbn', 'title', 'photo','genre','id_publish','num_page','year','discount','sale','description')
     list_display_links = ('title',)
     search_fields = ('isbn','title','isbn')   #!!!!добавить поиск по писателю
