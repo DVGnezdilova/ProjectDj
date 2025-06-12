@@ -438,39 +438,88 @@ def journal(request):
         'query': query,
     })
 
+from django.shortcuts import render
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db.models import Q
+
+
 def catalog(request, genre=None):
-    query = request.GET.get('q', '')  # Получаем поисковый запрос
-    page = request.GET.get('page', 1)  # Получаем номер страницы
+    query = request.GET.get('q', '')
+    selected_publishers = request.GET.getlist('publisher')
+    price_range = request.GET.get('price_range', '')
+    exclude_no_rating = request.GET.get('exclude_no_rating', '')
 
-    # Фильтрация по жанру и поиску
+    books = Book.objects.all()
+    
+    if exclude_no_rating:
+        books = books.annotate(
+            avg_rating=Avg(
+                Cast('review__rating', output_field=IntegerField()),
+                filter=Q(review__status_rev='Опубликован')  # только опубликованные отзывы
+            )
+        ).filter(~Q(avg_rating__isnull=True))
+
+    # Фильтрация по жанру
     if genre:
-        books = Book.objects.filter(genre=genre)
-    else:
-        books = Book.objects.all()
+        books = books.filter(genre=genre)
 
+    # Поиск по строке с логическими операторами
     if query:
         books = books.filter(
             Q(title__icontains=query) | 
             Q(id_writer__nickname__icontains=query)
         ).distinct()
-        # books = Book.objects.filter(title__contains=query)
+
+    # Фильтрация по издательству
+    if selected_publishers:
+        books = books.filter(id_publish_id__in=selected_publishers)
+
+    # Фильтрация по цене
+    if price_range:
+        if price_range == '0-500':
+            books = books.extra(
+                where= ["CAST((discount * (100 - CAST(sale AS INTEGER)) / 100) AS DECIMAL(10,2)) < 500"]
+            )
+        elif price_range == '500-1000':
+            books = books.extra(
+                where=[
+                    "CAST((discount * (100 - CAST(sale AS INTEGER)) / 100) AS DECIMAL(10,2)) >= 500",
+                    "CAST((discount * (100 - CAST(sale AS INTEGER)) / 100) AS DECIMAL(10,2)) <= 1000"
+                ]
+            )
+        elif price_range == '1000-2000':
+            books = books.extra(
+                where=[
+                    "CAST((discount * (100 - CAST(sale AS INTEGER)) / 100) AS DECIMAL(10,2)) >= 1000",
+                    "CAST((discount * (100 - CAST(sale AS INTEGER)) / 100) AS DECIMAL(10,2)) <= 2000"
+                ]
+            )
+        elif price_range == '2000+':
+            books = books.extra(
+                where=["CAST((discount * (100 - CAST(sale AS INTEGER)) / 100) AS DECIMAL(10,2)) > 2000"]
+            )
 
     # Пагинация
-    paginator = Paginator(books, 4)  # 2 элемента на странице
+    paginator = Paginator(books, 3)
+    page_number = request.GET.get('page')
     try:
-        page_obj = paginator.page(page)
+        page_obj = paginator.page(page_number)
     except PageNotAnInteger:
         page_obj = paginator.page(1)
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
-    # Расчет цены со скидкой
+    # Расчёт цены со скидкой
     for book in page_obj:
-        if book.sale:
-            discount_percentage = int(book.sale)
-            book.discounted_price = round(book.discount - (book.discount * discount_percentage / 100))
-        else:
-            book.discounted_price = book.discount
+        if not hasattr(book, 'discounted_price'):
+            if book.sale:
+                discount_percentage = int(book.sale)
+                book.discounted_price = round(book.discount - (book.discount * discount_percentage / 100))
+            else:
+                book.discounted_price = book.discount
+
+    # Получаем список издательств для фильтра
+    all_publishers = PublishingHouse.objects.all()
 
     genres = Book.objects.values_list('genre', flat=True).distinct()
 
@@ -479,7 +528,54 @@ def catalog(request, genre=None):
         'genres': genres,
         'query': query,
         'current_genre': genre,
+        'publishers': all_publishers,
+        'selected_publishers': selected_publishers,
+        'price_range': price_range,
+        'exclude_no_rating': exclude_no_rating,
     })
+
+# def catalog(request, genre=None):
+#     query = request.GET.get('q', '')  # Получаем поисковый запрос
+#     page = request.GET.get('page', 1)  # Получаем номер страницы
+
+#     # Фильтрация по жанру и поиску
+#     if genre:
+#         books = Book.objects.filter(genre=genre)
+#     else:
+#         books = Book.objects.all()
+
+#     if query:
+#         books = books.filter(
+#             Q(title__icontains=query) | 
+#             Q(id_writer__nickname__icontains=query)
+#         ).distinct()
+#         # books = Book.objects.filter(title__contains=query)
+
+#     # Пагинация
+#     paginator = Paginator(books, 4)  # 2 элемента на странице
+#     try:
+#         page_obj = paginator.page(page)
+#     except PageNotAnInteger:
+#         page_obj = paginator.page(1)
+#     except EmptyPage:
+#         page_obj = paginator.page(paginator.num_pages)
+
+#     # Расчет цены со скидкой
+#     for book in page_obj:
+#         if book.sale:
+#             discount_percentage = int(book.sale)
+#             book.discounted_price = round(book.discount - (book.discount * discount_percentage / 100))
+#         else:
+#             book.discounted_price = book.discount
+
+#     genres = Book.objects.values_list('genre', flat=True).distinct()
+
+#     return render(request, 'catalog.html', {
+#         'page_obj': page_obj,
+#         'genres': genres,
+#         'query': query,
+#         'current_genre': genre,
+#     })
 
 def publishers_list(request):
     # Получаем все издательства
@@ -538,39 +634,83 @@ def journal2(request):
         'cart_count': cart_count
     })
 
-
 def catalog2(request, genre=None):
-    query = request.GET.get('q', '')  # Получаем поисковый запрос
-    page = request.GET.get('page', 1)  # Получаем номер страницы
+    query = request.GET.get('q', '')
+    selected_publishers = request.GET.getlist('publisher')
+    price_range = request.GET.get('price_range', '')
+    exclude_no_rating = request.GET.get('exclude_no_rating', '')
 
-    # Фильтрация по жанру и поиску
+    books = Book.objects.all()
+    
+    if exclude_no_rating:
+        books = books.annotate(
+            avg_rating=Avg(
+                Cast('review__rating', output_field=IntegerField()),
+                filter=Q(review__status_rev='Опубликован')  # только опубликованные отзывы
+            )
+        ).filter(~Q(avg_rating__isnull=True))
+
+    # Фильтрация по жанру
     if genre:
-        books = Book.objects.filter(genre=genre)
-    else:
-        books = Book.objects.all()
+        books = books.filter(genre=genre)
 
+    # Поиск по строке с логическими операторами
     if query:
         books = books.filter(
             Q(title__icontains=query) | 
             Q(id_writer__nickname__icontains=query)
         ).distinct()
 
+    # Фильтрация по издательству
+    if selected_publishers:
+        books = books.filter(id_publish_id__in=selected_publishers)
+
+    # Фильтрация по цене
+    if price_range:
+        if price_range == '0-500':
+            books = books.extra(
+                where= ["CAST((discount * (100 - CAST(sale AS INTEGER)) / 100) AS DECIMAL(10,2)) < 500"]
+            )
+        elif price_range == '500-1000':
+            books = books.extra(
+                where=[
+                    "CAST((discount * (100 - CAST(sale AS INTEGER)) / 100) AS DECIMAL(10,2)) >= 500",
+                    "CAST((discount * (100 - CAST(sale AS INTEGER)) / 100) AS DECIMAL(10,2)) <= 1000"
+                ]
+            )
+        elif price_range == '1000-2000':
+            books = books.extra(
+                where=[
+                    "CAST((discount * (100 - CAST(sale AS INTEGER)) / 100) AS DECIMAL(10,2)) >= 1000",
+                    "CAST((discount * (100 - CAST(sale AS INTEGER)) / 100) AS DECIMAL(10,2)) <= 2000"
+                ]
+            )
+        elif price_range == '2000+':
+            books = books.extra(
+                where=["CAST((discount * (100 - CAST(sale AS INTEGER)) / 100) AS DECIMAL(10,2)) > 2000"]
+            )
+
     # Пагинация
-    paginator = Paginator(books, 4)  # 2 элемента на странице
+    paginator = Paginator(books, 3)
+    page_number = request.GET.get('page')
     try:
-        page_obj = paginator.page(page)
+        page_obj = paginator.page(page_number)
     except PageNotAnInteger:
         page_obj = paginator.page(1)
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
-    # Расчет цены со скидкой
+    # Расчёт цены со скидкой
     for book in page_obj:
-        if book.sale:
-            discount_percentage = int(book.sale)
-            book.discounted_price = round(book.discount - (book.discount * discount_percentage / 100))
-        else:
-            book.discounted_price = book.discount
+        if not hasattr(book, 'discounted_price'):
+            if book.sale:
+                discount_percentage = int(book.sale)
+                book.discounted_price = round(book.discount - (book.discount * discount_percentage / 100))
+            else:
+                book.discounted_price = book.discount
+
+    # Получаем список издательств для фильтра
+    all_publishers = PublishingHouse.objects.all()
 
     genres = Book.objects.values_list('genre', flat=True).distinct()
     cart_books_ids = []
@@ -594,8 +734,71 @@ def catalog2(request, genre=None):
         'current_genre': genre,
         'user_fav_books': fav_user,
         'cart_books_ids': cart_books_ids, 
-        'cart_count': cart_count
+        'cart_count': cart_count,
+        'publishers': all_publishers,
+        'selected_publishers': selected_publishers,
+        'price_range': price_range,
+        'exclude_no_rating': exclude_no_rating,
     })
+
+
+# def catalog2(request, genre=None):
+#     query = request.GET.get('q', '')  # Получаем поисковый запрос
+#     page = request.GET.get('page', 1)  # Получаем номер страницы
+
+#     # Фильтрация по жанру и поиску
+#     if genre:
+#         books = Book.objects.filter(genre=genre)
+#     else:
+#         books = Book.objects.all()
+
+#     if query:
+#         books = books.filter(
+#             Q(title__icontains=query) | 
+#             Q(id_writer__nickname__icontains=query)
+#         ).distinct()
+
+#     # Пагинация
+#     paginator = Paginator(books, 4)  # 2 элемента на странице
+#     try:
+#         page_obj = paginator.page(page)
+#     except PageNotAnInteger:
+#         page_obj = paginator.page(1)
+#     except EmptyPage:
+#         page_obj = paginator.page(paginator.num_pages)
+
+#     # Расчет цены со скидкой
+#     for book in page_obj:
+#         if book.sale:
+#             discount_percentage = int(book.sale)
+#             book.discounted_price = round(book.discount - (book.discount * discount_percentage / 100))
+#         else:
+#             book.discounted_price = book.discount
+
+#     genres = Book.objects.values_list('genre', flat=True).distinct()
+#     cart_books_ids = []
+#     fav_user = []
+#     cart_count = 0
+#     if request.user.is_authenticated:
+#         fav_user = list(
+#             Favourite.objects.filter(id_user=request.user).values_list('id_book__id', flat=True)
+#         )
+#         cart_count = ShoppingCart.objects.filter(id_user=request.user).count()
+#         cart_books_ids = list(
+#             ShoppingCart.objects.filter(id_user=request.user).values_list('id_book__id', flat=True)
+#         )
+#     else:
+#         fav_user = []
+
+#     return render(request, 'catalog2.html', {
+#         'page_obj': page_obj,
+#         'genres': genres,
+#         'query': query,
+#         'current_genre': genre,
+#         'user_fav_books': fav_user,
+#         'cart_books_ids': cart_books_ids, 
+#         'cart_count': cart_count
+#     })
 
 
 def publishers_list2(request):

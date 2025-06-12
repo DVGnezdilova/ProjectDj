@@ -50,9 +50,12 @@ class BookWriterAdmin(admin.ModelAdmin):
     # raw_id_fields = ('id_publish',)
 
 from simple_history.admin import SimpleHistoryAdmin
+from books.resources import BookResource
+from import_export.admin import ExportMixin
 
 @admin.register(Book) 
-class BookAdmin(SimpleHistoryAdmin): 
+class BookAdmin(ExportMixin, SimpleHistoryAdmin, admin.ModelAdmin): 
+    resource_class = BookResource
     list_display = ('id', 'isbn', 'title', 'photo','genre','id_publish','num_page','year','discount','sale','description')
     list_display_links = ('title',)
     search_fields = ('isbn','title','isbn')   #!!!!добавить поиск по писателю

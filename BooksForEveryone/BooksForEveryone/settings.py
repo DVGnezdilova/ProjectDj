@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'rest_framework',
     'simple_history',
+    'import_export',
     'books',
 ]
 

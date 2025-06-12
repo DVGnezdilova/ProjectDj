@@ -68,8 +68,7 @@
                     <!-- Выпадающее меню -->
                     <ul class="dropdown-menu genre-dropdown" aria-labelledby="catalogDropdown">
                         {% for genre in genres %}
-                        <li><a class="dropdown-item genre-item" href="{% url 'catalog' genre %}" name="catalog">{{ genre
-                                }}</a></li>
+                        <li><a class="dropdown-item genre-item" href="{% url 'catalog' genre %}" name="catalog">{{ genre }}</a></li>
                         {% empty %}
                         <li><a class="dropdown-item disabled" href="#">Нет доступных жанров</a></li>
                         {% endfor %}
