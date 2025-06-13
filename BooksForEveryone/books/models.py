@@ -132,13 +132,18 @@ ERROR_TYPES_CHOICES =(
     ('Ошибка в информации на сайте', 'Ошибка в информации на сайте'),
     ('Другое', 'Другое'))
 
+STATUSFEED_CHOICES = (
+    ('Новый', 'Новый'), 
+    ('Обработан', 'Обработан'))
+
 class Feedback(models.Model):
-    type =models.CharField(choices=ERROR_TYPES_CHOICES, verbose_name="Тип ошибки", null=False, blank=False) 
+    type = models.CharField(choices=ERROR_TYPES_CHOICES, verbose_name="Тип ошибки", null=False, blank=False) 
     message = models.TextField(verbose_name="Сообщение")
     email = models.EmailField(null=False, blank=False,verbose_name="Email пользователя")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания заявки")
+    status_feed = models.CharField(choices=STATUSFEED_CHOICES, verbose_name="Статус заявки", default="Новый", null=False, blank=False) 
     def __str__(self):
-        return f"{self.type()} — {self.email}"
+        return f"{self.get_type_display()} — {self.email}"
     class Meta:
         verbose_name = "заявка" #надпись сверху страницы таблицы
         verbose_name_plural = "Обратная связь" #переименовали таблицы на русский

@@ -8,13 +8,13 @@ from django.contrib.auth.models import User
 
 @admin.register(Feedback)
 class FeedbackAdmin(admin.ModelAdmin):
-    list_display = ('type', 'email', 'created_at')
-    list_filter = ('type',)
+    list_display = ('type', 'email', 'status_feed', 'created_at')
+    list_filter = ('type', 'status_feed',)
     search_fields = ('email', 'message')
     readonly_fields = ('created_at',)
     fieldsets = (
         (None, {
-            'fields': ('type', 'message', 'email', 'created_at')
+            'fields': ('type', 'message', 'email','status_feed', 'created_at')
         }),
     )
     ordering = ('-created_at',)

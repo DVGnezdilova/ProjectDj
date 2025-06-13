@@ -21,14 +21,39 @@
             <div class="small text-muted d-flex align-items-center">
                 <a href="#" id="supportButton" class="text-decoration-none text-muted me-2 fs-6">Обратная связь</a>
                 <!-- Модальное окно -->
-                <div id="modal" class="modal">
-                    <div class="modal-content">
-                        <span class="close">&times;</span>
-                        <p class="mx-3">
-                            Данный раздел находится в разработке, приносим свои извинения. Скоро можно будет отправлять сообщения напрямую в техническую поддержку, а пока вы можете позвонить на бесплатный номер <strong>+7 990 088 22 00</strong> или же написать нам на почту <a href="mailto:books4everyone@mail.ru">books4everyone@mail.ru</a>.
-                        </p>
+                    <div id="modal" class="modal">
+                        <div class="modal-content">
+                            <span class="close">&times;</span>
+                            <form id="feedbackForm">
+                                {% csrf_token %}
+                                <h5 class="mb-3">Оставить обращение</h5>
+
+                                <div class="mb-3">
+                                    <label for="type" class="form-label">Тип проблемы</label>
+                                    <select id="type" name="type" class="form-select" required>
+                                        <option value="">Выберите тип</option>
+                                        <option value="Проблема с заказом">Проблема с заказом</option>
+                                        <option value="Проблема с отзывом">Проблема с отзывом</option>
+                                        <option value="Ошибка в личных данных">Ошибка в личных данных</option>
+                                        <option value="Ошибка в информации на сайте">Ошибка в информации на сайте</option>
+                                        <option value="Другое">Другое</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="message" class="form-label">Сообщение</label>
+                                    <textarea id="message" name="message" rows="4" class="form-control" required></textarea>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Ваш Email</label>
+                                    <input type="email" id="email" name="email" class="form-control" required />
+                                </div>
+
+                                <button type="submit" class="btn btn-primary w-100">Отправить</button>
+                            </form>
+                        </div>
                     </div>
-                </div>
                 <span class="text-muted mx-2">|</span>
                 <a href="#" id="supportButton3" class="text-decoration-none text-muted fs-6">Наши магазины</a>
                 <div id="modal3" class="modal">
@@ -386,27 +411,67 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 // Получаем элементы модального окна
-        const modal = document.getElementById('modal');
+const modal = document.getElementById('modal');
         const supportButton = document.getElementById('supportButton');
         const closeButton = document.querySelector('.close');
-        
-        // Открываем модальное окно при нажатии на кнопку
-        supportButton.addEventListener('click', () => {
-            modal.style.display = 'block';
-        });
-        
-        // Закрываем модальное окно при нажатии на крестик
-        closeButton.addEventListener('click', () => {
-            modal.style.display = 'none';
-        });
-        
-        // Закрываем модальное окно при клике вне его области
+
+        // Открытие модального окна
+        if (supportButton && modal) {
+            supportButton.addEventListener('click', (e) => {
+                e.preventDefault();  // Чтобы ссылка "#" не мешала
+                modal.style.display = 'block';
+            });
+        }
+
+        // Закрытие по крестику
+        if (closeButton && modal) {
+            closeButton.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+        }
+
+        // Закрытие при клике вне области модального окна
         window.addEventListener('click', (event) => {
             if (event.target === modal) {
                 modal.style.display = 'none';
             }
         });
-                const modal3 = document.getElementById('modal3');  // ← Убедись, что ID правильный
+        document.getElementById("feedbackForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+
+
+            const messageInput = document.getElementById("message");
+            const message = messageInput.value.trim();
+
+            if (message.length < 10) {
+                alert("Сообщение должно содержать не менее 10 символов.");
+                return;
+            }
+
+            const formData = new FormData(this);
+            const data = {};
+            formData.forEach((value, key) => data[key] = value);
+
+            fetch('/api/feedback/submit/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                alert("Заявка успешно создана! С вами свяжется наша служба поддержки.");
+                document.getElementById("feedbackForm").reset();
+                document.getElementById("modal").style.display = "none";
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                alert("Не удалось отправить заявку");
+            });
+        });
+        const modal3 = document.getElementById('modal3');  // ← Убедись, что ID правильный
         const supportButton3 = document.getElementById('supportButton3');
         const closeButton3 = document.querySelector('.close3');
 

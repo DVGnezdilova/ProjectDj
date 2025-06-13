@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from books.models import Book, Writer, PublishingHouse, Review, Order, ShoppingCart, Article
+from books.models import Book, Writer, PublishingHouse, Feedback
 
 class WriterSerializer(serializers.ModelSerializer):
     class Meta:
@@ -36,4 +36,9 @@ class BookSerializer(serializers.ModelSerializer):
                 return obj.discount
         else:
             return obj.discount
-
+        
+class FeedbackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Feedback
+        fields = ['type', 'message', 'email', 'status_feed', 'created_at']
+        read_only_fields = ['status_feed', 'created_at']

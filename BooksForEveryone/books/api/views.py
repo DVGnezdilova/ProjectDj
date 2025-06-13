@@ -1,6 +1,6 @@
-from rest_framework import viewsets
+from rest_framework import viewsets,  status
 from rest_framework.decorators import api_view
-from books.models import Book, Favourite, ShoppingCart
+from books.models import Book, Favourite, ShoppingCart, Feedback
 from books.api.serializers import BookSerializer
 from django.db.models.functions import Cast
 from django.db.models import Avg, FloatField
@@ -40,6 +40,28 @@ class BookViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(rated_books, many=True)
         return Response(serializer.data)
 
-@action(detail=False, methods=['get'])
-def top_rated(self, request):
-    return Response({'status': 'Эндпоинт работает!'})
+# @action(detail=False, methods=['get'])
+# def top_rated(self, request):
+#     return Response({'status': 'Эндпоинт работает!'})
+
+
+from .serializers import FeedbackSerializer
+
+
+
+class FeedbackViewSet(viewsets.ModelViewSet):
+    queryset = Feedback.objects.all()
+    serializer_class = FeedbackSerializer
+    http_method_names = ['post']  # только POST для формы обратной связи
+
+    @action(methods=['POST'], detail=False)
+    def submit(self, request):
+        """
+        Обработка отправки формы обратной связи
+        URL: /api/feedback/submit/
+        """
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            feedback = serializer.save(status_feed='Новый')  # статус по умолчанию
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
