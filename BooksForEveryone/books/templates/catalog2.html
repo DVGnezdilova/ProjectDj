@@ -236,16 +236,27 @@
                                         <!-- Кнопка "Купить" -->
                                             <div class="d-flex justify-content-between mt-3">
                                             
-                                            <!-- Кнопка "Купить" -->
-                                            {% if book.id in cart_books_ids %}
-                                                <a href="{% url 'remove_from_cart_by_book' book.id %}" class="btn btn-primary w-100 me-2">В корзине</a>
-                                            {% else %}
-                                                <a href="{% url 'add_to_cart' book.id %}" class="btn btn-outline-primary w-100 me-2">В корзину</a>
-                                            {% endif %}
-                                            <a href="{% url 'add_to_favourite' book.id %}"
-                                            class="btn {% if book.id in user_fav_books %}btn-danger{% else %}btn-outline-danger{% endif %} w-100 ms-2">
-                                                <i class="bi {% if book.id in user_fav_books %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
-                                            </a>
+                                                {% if user.is_authenticated %}
+                                                    {% if user.is_staff %}
+                                            <!-- Только для модераторов -->
+                                                        <a class="buy-btn mt-1 d-block text-center" href="{% url 'vhod' %}"
+                                                            style="text-decoration: none;">
+                                                            <span>Купить</span>
+                                                        </a>
+                                                    {% else %}
+                                            <!-- Для обычных авторизованных пользователей -->
+                                                            {% if book.id in cart_books_ids %}
+                                                                <a href="{% url 'remove_from_cart_by_book' book.id %}" class="btn btn-primary w-100 me-2">В корзине</a>
+                                                            {% else %}
+                                                                <a href="{% url 'add_to_cart' book.id %}" class="btn btn-outline-primary w-100 me-2">В корзину</a>
+                                                            {% endif %}
+                                                            <a href="{% url 'add_to_favourite' book.id %}"
+                                                            class="btn {% if book.id in user_fav_books %}btn-danger{% else %}btn-outline-danger{% endif %} w-100 ms-2">
+                                                                <i class="bi {% if book.id in user_fav_books %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+                                                            </a>
+                                                        {% endif %}
+                                                    {% endif %}
+
                                             </div>
                                     </div>
                                 </div>

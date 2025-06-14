@@ -191,7 +191,16 @@
                             </div>
 
                             <!-- Кнопки -->
-                            <div class="d-grid gap-2 mt-3">
+                            <div class="d-grid">
+                                                    {% if user.is_authenticated %}
+                        {% if user.is_staff %}
+                            <!-- Только для модераторов -->
+                                        <a class="buy-btn mt-3 d-block text-center" href="{% url 'vhod' %}"
+                                            style="text-decoration: none;">
+                                            <span>Купить</span>
+                                        </a>
+                        {% else %}
+                            <!-- Для обычных авторизованных пользователей -->
                                             {% if book.id in cart_books_ids %}
                                                 <a href="{% url 'remove_from_cart_by_book' book.id %}" class="btn btn-primary w-100 me-2">В корзине</a>
                                             {% else %}
@@ -201,6 +210,8 @@
                                             class="btn {% if book.id in user_fav_books %}btn-danger{% else %}btn-outline-danger{% endif %} w-100">
                                                 <i class="bi {% if book.id in user_fav_books %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
                                             </a>
+                        {% endif %}
+                    {% endif %}
                             </div>
                         </div>
                     </a>

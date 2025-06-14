@@ -137,19 +137,19 @@
                             </p>
 
                             <!-- Рейтинг -->
-                            <div class="d-flex justify-content-center text-warning mb-2">
-                                {% with rating=book.get_avg_rating|default:0 %}
-                                    {% for i in "12345" %}
-                                        {% with current=i|floatformat:"0" %}
-                                            {% if rating >= current %}
-                                                <i class="bi bi-star-fill me-1"></i>
-                                            {% else %}
-                                                <i class="bi bi-star me-1"></i>
-                                            {% endif %}
-                                        {% endwith %}
-                                    {% endfor %}
-                                {% endwith %}
-                            </div>
+                                                        <div class="d-flex justify-content-center text-warning mb-2">
+                                                            {% with rating=book.get_avg_rating|default:0 %}
+                                                                {% for i in "12345" %}
+                                                                    {% with current_rating=i|floatformat:"0"|add:"0" %}
+                                                                        {% if rating >= current_rating %}
+                                                                            <i class="bi bi-star-fill"></i>
+                                                                        {% else %}
+                                                                            <i class="bi bi-star"></i>
+                                                                        {% endif %}
+                                                                    {% endwith %}
+                                                                {% endfor %}
+                                                            {% endwith %}
+                                                        </div>
 
                             <!-- Цена -->
                             <div class="price-container d-flex justify-content-between align-items-center mt-2">
@@ -162,7 +162,7 @@
 
                             <!-- Кнопки -->
                             <div class="d-grid gap-2 mt-3">
-                                <a href="{% url 'book_detail2' book.id %}" class="btn btn-primary">Подробнее</a>
+                                <a href="{% url 'book_detail2' book.id %}" class="btn btn-primary">Купить</a>
 
                             </div>
                         </div>

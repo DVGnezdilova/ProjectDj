@@ -64,18 +64,30 @@
                     </div>
                 </div>
             </div>
-            <div class="d-flex gap-3">
-                <a href="{% url 'favourite' %}"  class="navbt btn btn-light px-2"><i class="bi bi-heart-fill"></i></a>
-                <a href="{% url 'shopcart' %}" class="navbt btn btn-light px-2 position-relative">
-                    <i class="bi bi-cart"></i>
-                    {% if cart_count > 0 %}
-                        <span class="position-absolute top-0 mt-1 translate-middle badge rounded-pill bg-danger" style="font-size: 0.75rem;">
-                            {{ cart_count }}
-                        </span>
+                <div class="d-flex gap-3 align-items-center">
+                    {% if user.is_authenticated %}
+                        {% if user.is_staff %}
+                            <!-- Только для модераторов -->
+                            <div class="d-flex gap-3">
+                                <a href="{% url 'moderator_panel' %}" class="navbt btn p-0" name="vhod"><b><u>Панель модератора</u></b></a>
+                            </div>
+                        {% else %}
+                            <!-- Для обычных авторизованных пользователей -->
+                            <div class="d-flex gap-3">
+                            <a href="{% url 'favourite' %}"  class="navbt btn btn-light px-2"><i class="bi bi-heart-fill"></i></a>
+                            <a href="{% url 'shopcart' %}" class="navbt btn btn-light px-2 position-relative">
+                                <i class="bi bi-cart"></i>
+                                {% if cart_count > 0 %}
+                                    <span class="position-absolute top-0 mt-1 translate-middle badge rounded-pill bg-danger" style="font-size: 0.75rem;">
+                                        {{ cart_count }}
+                                    </span>
+                                {% endif %}
+                            </a>
+                            <a href="{% url 'lk' %}" class="bi bi-person-fill navbt btn btn-light px-2" name="vhod"></a>  
+                            </div> 
+                        {% endif %}
                     {% endif %}
-                </a>
-                <a href="{% url 'lk' %}" class="bi bi-person-fill navbt btn btn-light px-2" name="vhod"></a>  
-            </div> 
+                </div>
         </div>
       
           <!-- Название сайта -->
@@ -592,7 +604,7 @@ Promise.all([
 
         const html = `
             <div class="col-md-3 mb-4">
-                <a href="/book2/${book.id}" class="text-decoration-none text-dark">
+                <a href="/book/${book.id}" class="text-decoration-none text-dark">
                     <div class="products-inside d-flex flex-column h-100">
                         <div class="products-img">
                             <img src="${book.photo}" class="w-100" style="height: 400px; object-fit: cover; border-radius: 8px;">
