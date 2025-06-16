@@ -104,7 +104,7 @@ DATABASES = {
         'NAME': 'BooksForEveryone',
         'USER': 'adminBook',
         'PASSWORD': '1234',
-        'HOST': '127.0.0.1',
+        'HOST': 'localhost',  #localhost    db
         'PORT': '5432',
     }
 }
@@ -163,3 +163,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 INTERNAL_IPS = [
  '127.0.0.1',
 ]
+
+ALLOWED_HOSTS = ["*", "localhost", "127.0.0.1", "[::1]", "web"]

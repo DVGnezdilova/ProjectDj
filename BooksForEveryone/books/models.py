@@ -304,7 +304,7 @@ class Favourite(models.Model):
     def __str__(self):
         return self.id_book.title 
 
-class Order(models.Model):   #ДОП УСЛОВИЕ ДЛЯ АДМИНКИ: СТАТУС ЗАКАЗА НЕ МОЖЕТ БЫТЬ НА СБОРКЕ, ПОКА СУММА ЗАКАЗА = 0        это валидация)))))
+class Order(models.Model):   
     date_ord = models.DateField(auto_now_add=True,verbose_name="Дата заказа", null=False, blank=False)    
     id_user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="id_us",null=False, blank=False)
     id_shop = models.ForeignKey(Shop, on_delete=models.CASCADE, verbose_name="id_sp",null=False, blank=False)
